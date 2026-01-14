@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   # ==========================================================================
@@ -41,6 +42,18 @@ jobs:
             exit 1
           fi
           echo "✅ Version format valid: $VERSION"
+
+      - name: Validate secrets
+        run: |
+          missing=()
+          [ -z "$NPM_TOKEN" ] && missing+=("NPM_TOKEN")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing required secrets: ${missing[*]}"
+            exit 1
+          fi
+          echo "✅ All required secrets are configured"
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # ==========================================================================
   # Job 2: Build Electron apps for each platform
@@ -140,10 +153,9 @@ jobs:
 
             ### Installation
 
-            **Homebrew (macOS)**
+            **npm**
             ```bash
-            brew tap langchain-ai/tap
-            brew install --cask openwork
+            npx openwork
             ```
 
             **Direct Download**
@@ -162,8 +174,86 @@ jobs:
             ### Links
 
             - [Documentation](https://github.com/langchain-ai/openwork#readme)
+            - [npm package](https://www.npmjs.com/package/openwork)
           files: release-files/*
           draft: false
           prerelease: ${{ contains(needs.validate.outputs.version, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==========================================================================
+  # Job 4: Publish npm package
+  # ==========================================================================
+  publish-npm:
+    name: Publish to npm
+    needs: [validate, build, github-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-files/
+          pattern: release-*
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: |
+          echo "Generating checksums for release files..."
+          cd release-files
+
+          # Create checksums JSON
+          echo '{' > checksums.json
+          echo '  "algorithm": "sha256",' >> checksums.json
+          echo '  "files": {' >> checksums.json
+
+          first=true
+          for file in *.zip *.AppImage; do
+            if [ -f "$file" ]; then
+              checksum=$(sha256sum "$file" | cut -d' ' -f1)
+              if [ "$first" = true ]; then
+                first=false
+              else
+                echo ',' >> checksums.json
+              fi
+              printf '    "%s": "%s"' "$file" "$checksum" >> checksums.json
+            fi
+          done
+
+          echo '' >> checksums.json
+          echo '  }' >> checksums.json
+          echo '}' >> checksums.json
+
+          echo "Generated checksums:"
+          cat checksums.json
+
+      - name: Prepare npm package
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+
+          # Copy checksums to npm package
+          cp release-files/checksums.json distributions/npm/lib/checksums.json
+
+          # Update package.json version
+          cd distributions/npm
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+
+          echo "Package contents:"
+          ls -la
+          echo ""
+          echo "Checksums:"
+          cat lib/checksums.json
+
+      - name: Publish to npm
+        run: |
+          cd distributions/npm
+          npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

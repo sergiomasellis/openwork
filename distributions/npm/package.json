@@ -1,0 +1,33 @@
+{
+  "name": "openwork",
+  "version": "0.0.0-development",
+  "description": "A tactical agent interface for deepagentsjs",
+  "bin": {
+    "openwork": "./bin/cli.js"
+  },
+  "scripts": {
+    "postinstall": "node ./lib/install.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/langchain-ai/openwork.git"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "electron",
+    "deepagents",
+    "langchain",
+    "langgraph",
+    "desktop"
+  ],
+  "author": "LangChain",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/langchain-ai/openwork/issues"
+  },
+  "homepage": "https://github.com/langchain-ai/openwork#readme",
+  "engines": {
+    "node": ">=18"
+  }
+}

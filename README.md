@@ -16,6 +16,17 @@ A tactical agent interface for [deepagentsjs](https://github.com/langchain-ai/de
 
 ## Installation
 
+### npm (recommended)
+
+```bash
+# Run directly (downloads binary on first run)
+npx openwork
+
+# Or install globally
+npm install -g openwork
+openwork
+```
+
 ### Homebrew (macOS)
 
 ```bash
@@ -129,7 +140,10 @@ To publish a new release:
 
 1. Create a git tag: `git tag v0.2.0`
 2. Push the tag: `git push origin v0.2.0`
-3. GitHub Actions will build all platforms and create a GitHub release
+3. GitHub Actions will:
+   - Build Electron apps for all platforms
+   - Create a GitHub release with installers
+   - Publish the npm package with embedded checksums
 
 ## Design System
 
