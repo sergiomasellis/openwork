@@ -25,11 +25,11 @@ function getSystemPrompt(workspacePath: string): string {
 ### File System and Paths
 
 **IMPORTANT - Path Handling:**
-- All file paths use virtual paths starting with \`/\` (the workspace root)
-- \`/\` refers to the workspace root directory
-- Example: \`/src/index.ts\`, \`/README.md\`, \`/package.json\`
-- To list the workspace root, use \`ls("/")\`
-- Never use fully qualified system paths like \`${workspacePath}/...\`
+- All file paths use fully qualified absolute system paths
+- The workspace root is: \`${workspacePath}\`
+- Example: \`${workspacePath}/src/index.ts\`, \`${workspacePath}/README.md\`
+- To list the workspace root, use \`ls("${workspacePath}")\`
+- Always use full absolute paths for all file operations
 `
 
   return workingDirSection + BASE_SYSTEM_PROMPT
@@ -114,21 +114,35 @@ export async function createAgentRuntime(options: CreateAgentRuntimeOptions) {
 
   const backend = new LocalSandbox({
     rootDir: workspacePath,
-    virtualMode: true,
+    virtualMode: false, // Use absolute system paths for consistency with shell commands
     timeout: 120_000, // 2 minutes
     maxOutputBytes: 100_000 // ~100KB
   })
 
   const systemPrompt = getSystemPrompt(workspacePath)
 
+  // Custom filesystem prompt for absolute paths (matches virtualMode: false)
+  const filesystemSystemPrompt = `You have access to a filesystem. All file paths use fully qualified absolute system paths.
+
+- ls: list files in a directory (e.g., ls("${workspacePath}"))
+- read_file: read a file from the filesystem
+- write_file: write to a file in the filesystem
+- edit_file: edit a file in the filesystem
+- glob: find files matching a pattern (e.g., "**/*.py")
+- grep: search for text within files
+
+The workspace root is: ${workspacePath}`
+
   const agent = createDeepAgent({
     model,
     checkpointer,
     backend,
     systemPrompt,
+    // Custom filesystem prompt for absolute paths (requires deepagents update)
+    filesystemSystemPrompt,
     // Require human approval for all shell commands
     interruptOn: { execute: true }
-  })
+  } as Parameters<typeof createDeepAgent>[0])
 
   console.log('[Runtime] Deep agent created with LocalSandbox at:', workspacePath)
   return agent

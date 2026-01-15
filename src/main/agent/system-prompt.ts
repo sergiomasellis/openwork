@@ -57,11 +57,11 @@ When delegating to subagents:
 - read_file: Read file contents
 - edit_file: Replace exact strings in files (must read first, provide unique old_string)
 - write_file: Create or overwrite files
-- ls: List directory contents (use "/" for workspace root)
+- ls: List directory contents
 - glob: Find files by pattern (e.g., "**/*.py")
 - grep: Search file contents
 
-All file paths are virtual paths relative to the workspace root, starting with /.
+All file paths should use fully qualified absolute system paths (e.g., /Users/name/project/src/file.ts).
 
 ### Shell Tool
 - execute: Run shell commands in the workspace directory
