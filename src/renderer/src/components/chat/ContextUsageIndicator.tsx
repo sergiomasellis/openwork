@@ -24,6 +24,11 @@ const MODEL_CONTEXT_LIMITS: Record<string, number> = {
   'o3': 200_000,
   'o3-mini': 200_000,
   // Google models
+  'gemini-3-pro-preview': 2_000_000,
+  'gemini-3-flash-preview': 1_000_000,
+  'gemini-2.5-pro': 2_000_000,
+  'gemini-2.5-flash': 1_000_000,
+  'gemini-2.5-flash-lite': 1_000_000,
   'gemini-2.0-flash': 1_000_000,
   'gemini-1.5-pro': 2_000_000,
   'gemini-1.5-flash': 1_000_000
@@ -131,8 +136,8 @@ export function ContextUsageIndicator({
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-72 p-0 bg-background border-border" 
+      <PopoverContent
+        className="w-72 p-0 bg-background border-border"
         align="end"
         sideOffset={8}
       >
@@ -148,7 +153,7 @@ export function ContextUsageIndicator({
           {/* Progress bar */}
           <div className="space-y-1">
             <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div 
+              <div
                 className={cn('h-full rounded-full transition-all', barColorClass)}
                 style={{ width: `${usagePercent}%` }}
               />
@@ -164,7 +169,7 @@ export function ContextUsageIndicator({
             <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
               Token Breakdown
             </div>
-            
+
             <div className="space-y-1">
               {/* Input tokens */}
               <div className="flex items-center justify-between text-xs">
@@ -201,7 +206,7 @@ export function ContextUsageIndicator({
               <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
                 Cache
               </div>
-              
+
               <div className="space-y-1">
                 {tokenUsage.cacheReadTokens !== undefined && tokenUsage.cacheReadTokens > 0 && (
                   <div className="flex items-center justify-between text-xs">

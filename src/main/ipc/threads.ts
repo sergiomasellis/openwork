@@ -12,7 +12,7 @@ import { deleteThreadCheckpoint } from '../storage'
 import { generateTitle } from '../services/title-generator'
 import type { Thread } from '../types'
 
-export function registerThreadHandlers(ipcMain: IpcMain) {
+export function registerThreadHandlers(ipcMain: IpcMain): void {
   // List all threads
   ipcMain.handle('threads:list', async () => {
     const threads = getAllThreads()
@@ -90,7 +90,7 @@ export function registerThreadHandlers(ipcMain: IpcMain) {
   // Delete a thread
   ipcMain.handle('threads:delete', async (_event, threadId: string) => {
     console.log('[Threads] Deleting thread:', threadId)
-    
+
     // Delete from our metadata store
     dbDeleteThread(threadId)
     console.log('[Threads] Deleted from metadata store')

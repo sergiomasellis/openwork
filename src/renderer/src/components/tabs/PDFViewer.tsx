@@ -7,11 +7,11 @@ interface PDFViewerProps {
   base64Content: string
 }
 
-export function PDFViewer({ filePath, base64Content }: PDFViewerProps) {
+export function PDFViewer({ filePath, base64Content }: PDFViewerProps): React.JSX.Element {
   const fileName = filePath.split('/').pop() || filePath
   const pdfUrl = `data:application/pdf;base64,${base64Content}`
 
-  const handleOpenExternal = () => {
+  const handleOpenExternal = (): void => {
     // Open in system default PDF viewer
     const link = document.createElement('a')
     link.href = pdfUrl
@@ -28,7 +28,7 @@ export function PDFViewer({ filePath, base64Content }: PDFViewerProps) {
           <span className="text-muted-foreground/50">•</span>
           <span>PDF Document</span>
         </div>
-        
+
         <Button
           variant="ghost"
           size="sm"
