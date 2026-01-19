@@ -17,6 +17,10 @@ let openRouterModelsCache: ModelConfig[] | null = null
 let openRouterModelsCacheTime: number = 0
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24 // 24 hour cache
 
+// Cache for OpenCode Zen models from models.dev API
+let openCodeZenModelsCache: ModelConfig[] | null = null
+let openCodeZenModelsCacheTime: number = 0
+
 // Type for models.dev API response
 interface ModelsDevModel {
   id: string
@@ -45,6 +49,7 @@ interface ModelsDevProvider {
 
 interface ModelsDevResponse {
   openrouter?: ModelsDevProvider
+  opencode?: ModelsDevProvider
   [key: string]: ModelsDevProvider | undefined
 }
 
@@ -94,12 +99,59 @@ async function fetchOpenRouterModels(): Promise<ModelConfig[]> {
   }
 }
 
+// Fetch OpenCode Zen models from models.dev API
+async function fetchOpenCodeZenModels(): Promise<ModelConfig[]> {
+  // Return cached models if still valid
+  if (openCodeZenModelsCache && Date.now() - openCodeZenModelsCacheTime < CACHE_TTL_MS) {
+    return openCodeZenModelsCache
+  }
+
+  try {
+    const response = await fetch('https://models.dev/api.json')
+    if (!response.ok) {
+      console.warn(`Failed to fetch models.dev API: ${response.status}`)
+      return openCodeZenModelsCache || []
+    }
+
+    const data: ModelsDevResponse = await response.json()
+    const opencode = data.opencode
+
+    if (!opencode || !opencode.models) {
+      console.warn('No opencode provider found in models.dev API')
+      return openCodeZenModelsCache || []
+    }
+
+    // Filter models that support tool calls (required for agent use)
+    const models: ModelConfig[] = Object.values(opencode.models)
+      .filter((model) => model.tool_call === true)
+      .map((model) => ({
+        id: `opencodezen/${model.id}`,
+        name: model.name,
+        provider: 'opencodezen' as const,
+        model: model.id,
+        description: `${model.name} via OpenCode Zen`,
+        available: true
+      }))
+
+    // Update cache
+    openCodeZenModelsCache = models
+    openCodeZenModelsCacheTime = Date.now()
+
+    console.log(`Fetched ${models.length} OpenCode Zen models from models.dev API`)
+    return models
+  } catch (error) {
+    console.warn('Error fetching OpenCode Zen models:', error)
+    return openCodeZenModelsCache || []
+  }
+}
+
 // Provider configurations
 const PROVIDERS: Omit<Provider, 'hasApiKey'>[] = [
   { id: 'anthropic', name: 'Anthropic' },
   { id: 'openai', name: 'OpenAI' },
   { id: 'google', name: 'Google' },
-  { id: 'openrouter', name: 'OpenRouter' }
+  { id: 'openrouter', name: 'OpenRouter' },
+  { id: 'opencodezen', name: 'OpenCode Zen' }
 ]
 
 // Available models configuration (updated Jan 2026)
@@ -287,11 +339,12 @@ const STATIC_MODELS = AVAILABLE_MODELS
 export function registerModelHandlers(ipcMain: IpcMain): void {
   // List available models
   ipcMain.handle('models:list', async () => {
-    // Fetch OpenRouter models dynamically
+    // Fetch dynamic models from models.dev API
     const openRouterModels = await fetchOpenRouterModels()
+    const openCodeZenModels = await fetchOpenCodeZenModels()
 
-    // Combine static models with dynamic OpenRouter models
-    const allModels = [...STATIC_MODELS, ...openRouterModels]
+    // Combine static models with dynamic models from all providers
+    const allModels = [...STATIC_MODELS, ...openRouterModels, ...openCodeZenModels]
 
     // Check which models have API keys configured
     return allModels.map((model) => ({

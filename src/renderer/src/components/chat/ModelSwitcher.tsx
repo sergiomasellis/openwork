@@ -41,12 +41,21 @@ function OpenRouterIcon({ className }: { className?: string }) {
   )
 }
 
+function OpenCodeZenIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+    </svg>
+  )
+}
+
 const PROVIDER_ICONS: Record<ProviderId, React.FC<{ className?: string }>> = {
   anthropic: AnthropicIcon,
   openai: OpenAIIcon,
   google: GoogleIcon,
   ollama: () => null, // No icon for ollama yet
-  openrouter: OpenRouterIcon
+  openrouter: OpenRouterIcon,
+  opencodezen: OpenCodeZenIcon
 }
 
 // Fallback providers in case the backend hasn't loaded them yet
@@ -54,7 +63,8 @@ const FALLBACK_PROVIDERS: Provider[] = [
   { id: 'anthropic', name: 'Anthropic', hasApiKey: false },
   { id: 'openai', name: 'OpenAI', hasApiKey: false },
   { id: 'google', name: 'Google', hasApiKey: false },
-  { id: 'openrouter', name: 'OpenRouter', hasApiKey: false }
+  { id: 'openrouter', name: 'OpenRouter', hasApiKey: false },
+  { id: 'opencodezen', name: 'OpenCode Zen', hasApiKey: false }
 ]
 
 interface ModelSwitcherProps {

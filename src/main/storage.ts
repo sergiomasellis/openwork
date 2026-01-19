@@ -10,7 +10,8 @@ const ENV_VAR_NAMES: Record<string, string> = {
   anthropic: 'ANTHROPIC_API_KEY',
   openai: 'OPENAI_API_KEY',
   google: 'GOOGLE_API_KEY',
-  openrouter: 'OPENROUTER_API_KEY'
+  openrouter: 'OPENROUTER_API_KEY',
+  opencodezen: 'OPENCODE_API_KEY'
 }
 
 export function getOpenworkDir(): string {

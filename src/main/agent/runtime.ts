@@ -116,6 +116,23 @@ function getModelInstance(modelId?: string): ChatAnthropic | ChatOpenAI | ChatGo
         baseURL: 'https://openrouter.ai/api/v1'
       }
     })
+  } else if (model.startsWith('opencodezen/')) {
+    // OpenCode Zen models use format: opencodezen/model-name
+    // Extract the actual model name (everything after 'opencodezen/')
+    const openCodeZenModel = model.replace('opencodezen/', '')
+    const openCodeZenApiKey = getApiKey('opencodezen')
+    console.log('[Runtime] OpenCode Zen API key present:', !!openCodeZenApiKey)
+    if (!openCodeZenApiKey) {
+      throw new Error('OpenCode Zen API key not configured')
+    }
+    // OpenCode Zen uses OpenAI-compatible API
+    return new ChatOpenAI({
+      model: openCodeZenModel,
+      apiKey: openCodeZenApiKey,
+      configuration: {
+        baseURL: 'https://opencode.ai/zen/v1'
+      }
+    })
   }
 
   // Default to model string (let deepagents handle it)
