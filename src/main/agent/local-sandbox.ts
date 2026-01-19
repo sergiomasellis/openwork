@@ -105,7 +105,20 @@ export class LocalSandbox extends FilesystemBackend implements SandboxBackendPro
       // Determine shell based on platform
       const isWindows = process.platform === 'win32'
       const shell = isWindows ? 'cmd.exe' : '/bin/sh'
-      const shellArgs = isWindows ? ['/c', command] : ['-c', command]
+
+      // Convert forward slashes to backslashes in Windows paths for cmd.exe compatibility
+      // This handles paths like "C:/Users/..." which need to be "C:\Users\..." for Windows commands
+      let processedCommand = command
+      if (isWindows) {
+        // Match Windows absolute paths (drive letter followed by colon and forward slashes)
+        // and convert forward slashes to backslashes within quoted strings and bare paths
+        processedCommand = command.replace(
+          /([A-Za-z]:)(\/[^"'\s]*|\/[^"]*(?=")|\/[^']*(?='))/g,
+          (match, drive, path) => drive + path.replace(/\//g, '\\')
+        )
+      }
+
+      const shellArgs = isWindows ? ['/c', processedCommand] : ['-c', command]
 
       const proc = spawn(shell, shellArgs, {
         cwd: this.workingDir,
