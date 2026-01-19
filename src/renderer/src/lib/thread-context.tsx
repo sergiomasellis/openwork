@@ -9,6 +9,8 @@ import {
   useSyncExternalStore,
   type ReactNode
 } from 'react'
+
+/* eslint-disable react-refresh/only-export-components */
 import { useStream } from '@langchain/langgraph-sdk/react'
 import { ElectronIPCTransport } from './electron-transport'
 import type { Message, Todo, FileInfo, Subagent, HITLRequest } from '@/types'
@@ -143,7 +145,7 @@ function ThreadStreamHolder({
   onStreamUpdate: (data: StreamData) => void
   onCustomEvent: (data: CustomEventData) => void
   onError: (error: Error) => void
-}) {
+}): null {
   const transport = useMemo(() => new ElectronIPCTransport(), [])
 
   // Use refs to avoid stale closures
@@ -209,7 +211,7 @@ function ThreadStreamHolder({
   return null
 }
 
-export function ThreadProvider({ children }: { children: ReactNode }) {
+export function ThreadProvider({ children }: { children: ReactNode }): React.JSX.Element {
   const [threadStates, setThreadStates] = useState<Record<string, ThreadState>>({})
   const [activeThreadIds, setActiveThreadIds] = useState<Set<string>>(new Set())
   const initializedThreadsRef = useRef<Set<string>>(new Set())
@@ -449,7 +451,8 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
         closeFile: (path: string) => {
           updateThreadState(threadId, (state) => {
             const newOpenFiles = state.openFiles.filter((f) => f.path !== path)
-            const { [path]: _, ...newFileContents } = state.fileContents
+            const newFileContents = { ...state.fileContents }
+            delete newFileContents[path]
             let newActiveTab = state.activeTab
             if (state.activeTab === path) {
               const closedIndex = state.openFiles.findIndex((f) => f.path === path)
@@ -678,6 +681,7 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useThreadContext(): ThreadContextValue {
   const context = useContext(ThreadContext)
   if (!context) throw new Error('useThreadContext must be used within a ThreadProvider')
@@ -685,7 +689,7 @@ export function useThreadContext(): ThreadContextValue {
 }
 
 // Hook to subscribe to stream data for a thread using useSyncExternalStore
-export function useThreadStream(threadId: string) {
+export function useThreadStream(threadId: string): StreamData {
   const context = useThreadContext()
 
   const subscribe = useCallback(
@@ -699,7 +703,7 @@ export function useThreadStream(threadId: string) {
 }
 
 // Hook to access current thread's state and actions
-export function useCurrentThread(threadId: string) {
+export function useCurrentThread(threadId: string): ThreadState & ThreadActions {
   const context = useThreadContext()
 
   useEffect(() => {
@@ -713,7 +717,7 @@ export function useCurrentThread(threadId: string) {
 }
 
 // Hook for nullable threadId
-export function useThreadState(threadId: string | null) {
+export function useThreadState(threadId: string | null): (ThreadState & ThreadActions) | null {
   const context = useThreadContext()
 
   useEffect(() => {

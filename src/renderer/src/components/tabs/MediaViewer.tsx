@@ -8,7 +8,7 @@ interface MediaViewerProps {
   mediaType: 'video' | 'audio'
 }
 
-export function MediaViewer({ filePath, base64Content, mimeType, mediaType }: MediaViewerProps) {
+export function MediaViewer({ filePath, base64Content, mimeType, mediaType }: MediaViewerProps): React.JSX.Element {
   const fileName = filePath.split('/').pop() || filePath
   const mediaUrl = `data:${mimeType};base64,${base64Content}`
 

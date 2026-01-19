@@ -10,7 +10,7 @@ interface StreamingMarkdownProps {
 export const StreamingMarkdown = memo(function StreamingMarkdown({
   children,
   isStreaming = false
-}: StreamingMarkdownProps) {
+}: StreamingMarkdownProps): React.JSX.Element {
   return (
     <div className="streaming-markdown">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>

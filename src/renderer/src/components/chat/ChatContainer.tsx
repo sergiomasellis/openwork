@@ -7,7 +7,8 @@ import { useCurrentThread, useThreadStream } from '@/lib/thread-context'
 import { MessageBubble } from './MessageBubble'
 import { ModelSwitcher } from './ModelSwitcher'
 import { Folder } from 'lucide-react'
-import { WorkspacePicker, selectWorkspaceFolder } from './WorkspacePicker'
+import { WorkspacePicker } from './WorkspacePicker'
+import { selectWorkspaceFolder } from '@/lib/workspace-utils'
 import { ChatTodos } from './ChatTodos'
 import { ContextUsageIndicator } from './ContextUsageIndicator'
 import type { Message } from '@/types'
@@ -61,7 +62,7 @@ export function ChatContainer({ threadId }: ChatContainerProps): React.JSX.Eleme
   const isLoading = streamData.isLoading
 
   const handleApprovalDecision = useCallback(
-    async (decision: 'approve' | 'reject' | 'edit') => {
+    async (decision: 'approve' | 'reject' | 'edit'): Promise<void> => {
       if (!pendingApproval || !stream) return
 
       setPendingApproval(null)
@@ -163,14 +164,14 @@ export function ChatContainer({ threadId }: ChatContainerProps): React.JSX.Eleme
   }, [displayMessages])
 
   // Get the actual scrollable viewport element from Radix ScrollArea
-  const getViewport = useCallback(() => {
+  const getViewport = useCallback((): HTMLDivElement | null => {
     return scrollRef.current?.querySelector(
       '[data-radix-scroll-area-viewport]'
     ) as HTMLDivElement | null
   }, [])
 
   // Track scroll position to determine if user is at bottom
-  const handleScroll = useCallback(() => {
+  const handleScroll = useCallback((): void => {
     const viewport = getViewport()
     if (!viewport) return
 
@@ -286,7 +287,7 @@ export function ChatContainer({ threadId }: ChatContainerProps): React.JSX.Eleme
   }
 
   const handleSelectWorkspaceFromEmptyState = async (): Promise<void> => {
-    await selectWorkspaceFolder(threadId, setWorkspacePath, setWorkspaceFiles, () => {}, undefined)
+    await selectWorkspaceFolder(threadId, setWorkspacePath, setWorkspaceFiles, () => { }, undefined)
   }
 
   return (
@@ -322,9 +323,9 @@ export function ChatContainer({ threadId }: ChatContainerProps): React.JSX.Eleme
             )}
 
             {displayMessages.map((message) => (
-              <MessageBubble 
-                key={message.id} 
-                message={message} 
+              <MessageBubble
+                key={message.id}
+                message={message}
                 toolResults={toolResults}
                 pendingApproval={pendingApproval}
                 onApprovalDecision={handleApprovalDecision}

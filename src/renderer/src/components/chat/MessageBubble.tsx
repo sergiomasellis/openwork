@@ -17,7 +17,7 @@ interface MessageBubbleProps {
   onApprovalDecision?: (decision: 'approve' | 'reject' | 'edit') => void
 }
 
-export function MessageBubble({ message, isStreaming, toolResults, pendingApproval, onApprovalDecision }: MessageBubbleProps) {
+export function MessageBubble({ message, isStreaming, toolResults, pendingApproval, onApprovalDecision }: MessageBubbleProps): React.JSX.Element | null {
   const isUser = message.role === 'user'
   const isTool = message.role === 'tool'
 
@@ -26,17 +26,17 @@ export function MessageBubble({ message, isStreaming, toolResults, pendingApprov
     return null
   }
 
-  const getIcon = () => {
+  const getIcon = (): React.JSX.Element => {
     if (isUser) return <User className="size-4" />
     return <Bot className="size-4" />
   }
 
-  const getLabel = () => {
+  const getLabel = (): string => {
     if (isUser) return 'YOU'
     return 'AGENT'
   }
 
-  const renderContent = () => {
+  const renderContent = (): React.ReactNode => {
     if (typeof message.content === 'string') {
       // Empty content
       if (!message.content.trim()) {

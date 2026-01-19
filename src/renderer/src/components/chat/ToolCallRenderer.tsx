@@ -1,8 +1,8 @@
-import { 
-  FileText, 
-  FolderOpen, 
-  Search, 
-  Edit, 
+import {
+  FileText,
+  FolderOpen,
+  Search,
+  Edit,
   Terminal,
   ListTodo,
   GitBranch,
@@ -61,7 +61,7 @@ function getFileName(path: string): string {
 }
 
 // Render todos nicely
-function TodosDisplay({ todos }: { todos: Todo[] }) {
+function TodosDisplay({ todos }: { todos: Todo[] }): React.JSX.Element {
   const statusConfig: Record<string, { icon: typeof Circle; color: string }> = {
     pending: { icon: Circle, color: 'text-muted-foreground' },
     in_progress: { icon: Clock, color: 'text-status-info' },
@@ -92,7 +92,7 @@ function TodosDisplay({ todos }: { todos: Todo[] }) {
 }
 
 // Render file list nicely
-function FileListDisplay({ files, isGlob }: { files: string[] | Array<{ path: string; is_dir?: boolean }>; isGlob?: boolean }) {
+function FileListDisplay({ files, isGlob }: { files: string[] | Array<{ path: string; is_dir?: boolean }>; isGlob?: boolean }): React.JSX.Element {
   const items = files.slice(0, 15) // Limit display
   const hasMore = files.length > 15
 
@@ -122,7 +122,7 @@ function FileListDisplay({ files, isGlob }: { files: string[] | Array<{ path: st
 }
 
 // Render grep results nicely
-function GrepResultsDisplay({ matches }: { matches: Array<{ path: string; line?: number; text?: string }> }) {
+function GrepResultsDisplay({ matches }: { matches: Array<{ path: string; line?: number; text?: string }> }): React.JSX.Element {
   const grouped = matches.reduce((acc, match) => {
     if (!acc[match.path]) acc[match.path] = []
     acc[match.path].push(match)
@@ -163,7 +163,7 @@ function GrepResultsDisplay({ matches }: { matches: Array<{ path: string; line?:
 }
 
 // Render file content preview
-function FileContentPreview({ content }: { content: string; path?: string }) {
+function FileContentPreview({ content }: { content: string; path?: string }): React.JSX.Element {
   const lines = content.split('\n')
   const preview = lines.slice(0, 10)
   const hasMore = lines.length > 10
@@ -188,7 +188,7 @@ function FileContentPreview({ content }: { content: string; path?: string }) {
 }
 
 // Render edit/write file summary
-function FileEditSummary({ args }: { args: Record<string, unknown> }) {
+function FileEditSummary({ args }: { args: Record<string, unknown> }): React.JSX.Element | null {
   const path = (args.path || args.file_path) as string
   const content = args.content as string | undefined
   const oldStr = args.old_str as string | undefined
@@ -221,7 +221,7 @@ function FileEditSummary({ args }: { args: Record<string, unknown> }) {
 }
 
 // Command display
-function CommandDisplay({ command, output }: { command: string; output?: string }) {
+function CommandDisplay({ command, output }: { command: string; output?: string }): React.JSX.Element {
   return (
     <div className="text-xs space-y-2 w-full overflow-hidden">
       <div className="font-mono bg-background rounded-sm p-2 flex items-center gap-2 min-w-0">
@@ -239,7 +239,7 @@ function CommandDisplay({ command, output }: { command: string; output?: string 
 }
 
 // Subagent task display
-function TaskDisplay({ args, isExpanded }: { args: Record<string, unknown>; isExpanded?: boolean }) {
+function TaskDisplay({ args, isExpanded }: { args: Record<string, unknown>; isExpanded?: boolean }): React.JSX.Element {
   const name = args.name as string | undefined
   const description = args.description as string | undefined
 
@@ -263,7 +263,7 @@ function TaskDisplay({ args, isExpanded }: { args: Record<string, unknown>; isEx
   )
 }
 
-export function ToolCallRenderer({ toolCall, result, isError, needsApproval, onApprovalDecision }: ToolCallRendererProps) {
+export function ToolCallRenderer({ toolCall, result, isError, needsApproval, onApprovalDecision }: ToolCallRendererProps): React.JSX.Element | null {
   // Defensive: ensure args is always an object
   const args = toolCall?.args || {}
 
@@ -278,18 +278,18 @@ export function ToolCallRenderer({ toolCall, result, isError, needsApproval, onA
   const label = TOOL_LABELS[toolCall.name] || toolCall.name
   const isPanelSynced = PANEL_SYNCED_TOOLS.has(toolCall.name)
 
-  const handleApprove = (e: React.MouseEvent) => {
+  const handleApprove = (e: React.MouseEvent): void => {
     e.stopPropagation()
     onApprovalDecision?.('approve')
   }
 
-  const handleReject = (e: React.MouseEvent) => {
+  const handleReject = (e: React.MouseEvent): void => {
     e.stopPropagation()
     onApprovalDecision?.('reject')
   }
 
   // Format the main argument for display
-  const getDisplayArg = () => {
+  const getDisplayArg = (): string | null => {
     if (!args) return null
     if (args.path) return args.path as string
     if (args.file_path) return args.file_path as string
@@ -303,7 +303,7 @@ export function ToolCallRenderer({ toolCall, result, isError, needsApproval, onA
   const displayArg = getDisplayArg()
 
   // Render formatted content based on tool type
-  const renderFormattedContent = () => {
+  const renderFormattedContent = (): React.ReactNode => {
     if (!args) return null
 
     switch (toolCall.name) {
@@ -336,7 +336,7 @@ export function ToolCallRenderer({ toolCall, result, isError, needsApproval, onA
   }
 
   // Render result based on tool type
-  const renderFormattedResult = () => {
+  const renderFormattedResult = (): React.ReactNode => {
     if (result === undefined) return null
 
     // Handle errors
@@ -533,11 +533,11 @@ export function ToolCallRenderer({ toolCall, result, isError, needsApproval, onA
         ) : (
           <ChevronRight className="size-4 text-muted-foreground shrink-0" />
         )}
-        
+
         <Icon className={cn("size-4 shrink-0", needsApproval ? "text-amber-500" : "text-status-info")} />
-        
+
         <span className="text-xs font-medium shrink-0">{label}</span>
-        
+
         {displayArg && (
           <span className="flex-1 truncate text-left text-xs text-muted-foreground font-mono">
             {displayArg}
@@ -561,7 +561,7 @@ export function ToolCallRenderer({ toolCall, result, isError, needsApproval, onA
             {isError ? 'ERROR' : 'OK'}
           </Badge>
         )}
-        
+
         {isPanelSynced && !needsApproval && (
           <Badge variant="outline" className="shrink-0 text-[9px]">
             SYNCED
@@ -574,7 +574,7 @@ export function ToolCallRenderer({ toolCall, result, isError, needsApproval, onA
         <div className="border-t border-amber-500/20 px-3 py-3 space-y-3">
           {/* Show formatted content (e.g., command preview) */}
           {formattedContent}
-          
+
           {/* Arguments */}
           <div>
             <div className="text-section-header text-[10px] mb-1">ARGUMENTS</div>
@@ -582,16 +582,16 @@ export function ToolCallRenderer({ toolCall, result, isError, needsApproval, onA
               {JSON.stringify(args, null, 2)}
             </pre>
           </div>
-          
+
           {/* Action buttons */}
           <div className="flex items-center justify-end gap-2">
-            <button 
+            <button
               className="px-3 py-1.5 text-xs border border-border rounded-sm hover:bg-background-interactive transition-colors"
               onClick={handleReject}
             >
               Reject
             </button>
-            <button 
+            <button
               className="px-3 py-1.5 text-xs bg-status-nominal text-background rounded-sm hover:bg-status-nominal/90 transition-colors"
               onClick={handleApprove}
             >
