@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react"
 import {
   Folder,
   File,
@@ -7,13 +7,13 @@ import {
   FolderOpen,
   Loader2,
   RefreshCw
-} from 'lucide-react'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import { useAppStore } from '@/lib/store'
-import { useThreadState } from '@/lib/thread-context'
-import type { FileInfo } from '@/types'
+} from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { useAppStore } from "@/lib/store"
+import { useThreadState } from "@/lib/thread-context"
+import type { FileInfo } from "@/types"
 
 export function FilesystemPanel() {
   const { currentThreadId } = useAppStore()
@@ -51,14 +51,14 @@ export function FilesystemPanel() {
     const cleanup = window.api.workspace.onFilesChanged(async (data) => {
       // Only refresh if this is the current thread
       if (data.threadId === currentThreadId) {
-        console.log('[FilesystemPanel] Files changed, refreshing...')
+        console.log("[FilesystemPanel] Files changed, refreshing...")
         try {
           const result = await window.api.workspace.loadFromDisk(data.threadId)
           if (result.success) {
             setWorkspaceFiles(result.files)
           }
         } catch (e) {
-          console.error('[FilesystemPanel] Error refreshing files:', e)
+          console.error("[FilesystemPanel] Error refreshing files:", e)
         }
       }
     })
@@ -83,7 +83,7 @@ export function FilesystemPanel() {
         }
       }
     } catch (e) {
-      console.error('[FilesystemPanel] Select folder error:', e)
+      console.error("[FilesystemPanel] Select folder error:", e)
     } finally {
       setLoading(false)
     }
@@ -100,20 +100,20 @@ export function FilesystemPanel() {
         setWorkspaceFiles(result.files)
       }
     } catch (e) {
-      console.error('[FilesystemPanel] Refresh error:', e)
+      console.error("[FilesystemPanel] Refresh error:", e)
     } finally {
       setLoading(false)
     }
   }
 
   // Normalize path to always start with /
-  const normalizePath = (p: string) => (p.startsWith('/') ? p : '/' + p)
+  const normalizePath = (p: string) => (p.startsWith("/") ? p : "/" + p)
 
   // Get parent path, always returns / for root-level items
   const getParentPath = (p: string) => {
     const normalized = normalizePath(p)
-    const lastSlash = normalized.lastIndexOf('/')
-    if (lastSlash <= 0) return '/'
+    const lastSlash = normalized.lastIndexOf("/")
+    if (lastSlash <= 0) return "/"
     return normalized.substring(0, lastSlash)
   }
 
@@ -128,21 +128,21 @@ export function FilesystemPanel() {
 
       // Walk up the path to collect all parent directories
       let current = getParentPath(normalized)
-      while (current !== '/') {
+      while (current !== "/") {
         allDirs.add(current)
         current = getParentPath(current)
       }
 
       // If this is an explicit directory entry, add it
       if (file.is_dir) {
-        const dirPath = normalized.endsWith('/') ? normalized.slice(0, -1) : normalized
+        const dirPath = normalized.endsWith("/") ? normalized.slice(0, -1) : normalized
         allDirs.add(dirPath)
       }
     })
 
     // Second pass: add files and directories to their parent's children list
     files.forEach((file) => {
-      const normalized = normalizePath(file.path.endsWith('/') ? file.path.slice(0, -1) : file.path)
+      const normalized = normalizePath(file.path.endsWith("/") ? file.path.slice(0, -1) : file.path)
       const parentPath = getParentPath(normalized)
 
       if (!tree.has(parentPath)) {
@@ -200,7 +200,7 @@ export function FilesystemPanel() {
   }
 
   const renderNode = (file: FileInfo, depth: number = 0) => {
-    const name = file.path.split('/').pop() || file.path
+    const name = file.path.split("/").pop() || file.path
     const isExpanded = expandedDirs.has(file.path)
     const children = tree.get(file.path) || []
 
@@ -209,7 +209,7 @@ export function FilesystemPanel() {
         <button
           onClick={() => file.is_dir && toggleDir(file.path)}
           className={cn(
-            'flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-background-interactive transition-colors'
+            "flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-background-interactive transition-colors"
           )}
           style={{ paddingLeft: `${depth * 16 + 12}px` }}
         >
@@ -242,7 +242,7 @@ export function FilesystemPanel() {
   }
 
   // Get root level items (all paths are normalized to start with /)
-  const rootItems = tree.get('/') || []
+  const rootItems = tree.get("/") || []
 
   // If no workspace is selected, show selection prompt
   if (!workspacePath) {
@@ -286,7 +286,7 @@ export function FilesystemPanel() {
               className="text-[10px] text-muted-foreground truncate max-w-[80px]"
               title={workspacePath}
             >
-              {workspacePath.split('/').pop()}
+              {workspacePath.split("/").pop()}
             </span>
             <Button
               variant="ghost"

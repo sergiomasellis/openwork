@@ -14,18 +14,18 @@ import {
   XCircle,
   File,
   Folder
-} from 'lucide-react'
-import { useState } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
-import type { ToolCall, Todo } from '@/types'
+} from "lucide-react"
+import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
+import type { ToolCall, Todo } from "@/types"
 
 interface ToolCallRendererProps {
   toolCall: ToolCall
   result?: string | unknown
   isError?: boolean
   needsApproval?: boolean
-  onApprovalDecision?: (decision: 'approve' | 'reject' | 'edit') => void
+  onApprovalDecision?: (decision: "approve" | "reject" | "edit") => void
 }
 
 const TOOL_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -41,49 +41,49 @@ const TOOL_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
 }
 
 const TOOL_LABELS: Record<string, string> = {
-  read_file: 'Read File',
-  write_file: 'Write File',
-  edit_file: 'Edit File',
-  ls: 'List Directory',
-  glob: 'Find Files',
-  grep: 'Search Content',
-  execute: 'Execute Command',
-  write_todos: 'Update Tasks',
-  task: 'Subagent Task'
+  read_file: "Read File",
+  write_file: "Write File",
+  edit_file: "Edit File",
+  ls: "List Directory",
+  glob: "Find Files",
+  grep: "Search Content",
+  execute: "Execute Command",
+  write_todos: "Update Tasks",
+  task: "Subagent Task"
 }
 
 // Tools whose results are shown in the UI panels and don't need verbose display
-const PANEL_SYNCED_TOOLS = new Set(['write_todos'])
+const PANEL_SYNCED_TOOLS = new Set(["write_todos"])
 
 // Helper to get a clean file name from path
 function getFileName(path: string): string {
-  return path.split('/').pop() || path
+  return path.split("/").pop() || path
 }
 
 // Render todos nicely
-function TodosDisplay({ todos }: { todos: Todo[] }) {
+function TodosDisplay({ todos }: { todos: Todo[] }): React.JSX.Element {
   const statusConfig: Record<string, { icon: typeof Circle; color: string }> = {
-    pending: { icon: Circle, color: 'text-muted-foreground' },
-    in_progress: { icon: Clock, color: 'text-status-info' },
-    completed: { icon: CheckCircle2, color: 'text-status-nominal' },
-    cancelled: { icon: XCircle, color: 'text-muted-foreground' }
+    pending: { icon: Circle, color: "text-muted-foreground" },
+    in_progress: { icon: Clock, color: "text-status-info" },
+    completed: { icon: CheckCircle2, color: "text-status-nominal" },
+    cancelled: { icon: XCircle, color: "text-muted-foreground" }
   }
 
-  const defaultConfig = { icon: Circle, color: 'text-muted-foreground' }
+  const defaultConfig = { icon: Circle, color: "text-muted-foreground" }
 
   return (
     <div className="space-y-1">
       {todos.map((todo, i) => {
         const config = statusConfig[todo.status] || defaultConfig
         const Icon = config.icon
-        const isDone = todo.status === 'completed' || todo.status === 'cancelled'
+        const isDone = todo.status === "completed" || todo.status === "cancelled"
         return (
           <div
             key={todo.id || i}
-            className={cn('flex items-start gap-2 text-xs', isDone && 'opacity-50')}
+            className={cn("flex items-start gap-2 text-xs", isDone && "opacity-50")}
           >
-            <Icon className={cn('size-3.5 mt-0.5 shrink-0', config.color)} />
-            <span className={cn(isDone && 'line-through')}>{todo.content}</span>
+            <Icon className={cn("size-3.5 mt-0.5 shrink-0", config.color)} />
+            <span className={cn(isDone && "line-through")}>{todo.content}</span>
           </div>
         )
       })}
@@ -98,15 +98,15 @@ function FileListDisplay({
 }: {
   files: string[] | Array<{ path: string; is_dir?: boolean }>
   isGlob?: boolean
-}) {
+}): React.JSX.Element {
   const items = files.slice(0, 15) // Limit display
   const hasMore = files.length > 15
 
   return (
     <div className="space-y-0.5">
       {items.map((file, i) => {
-        const path = typeof file === 'string' ? file : file.path
-        const isDir = typeof file === 'object' && file.is_dir
+        const path = typeof file === "string" ? file : file.path
+        const isDir = typeof file === "object" && file.is_dir
         return (
           <div key={i} className="flex items-center gap-2 text-xs font-mono">
             {isDir ? (
@@ -130,7 +130,7 @@ function GrepResultsDisplay({
   matches
 }: {
   matches: Array<{ path: string; line?: number; text?: string }>
-}) {
+}): React.JSX.Element {
   const grouped = matches.reduce(
     (acc, match) => {
       if (!acc[match.path]) acc[match.path] = []
@@ -174,8 +174,8 @@ function GrepResultsDisplay({
 }
 
 // Render file content preview
-function FileContentPreview({ content }: { content: string; path?: string }) {
-  const lines = content.split('\n')
+function FileContentPreview({ content }: { content: string; path?: string }): React.JSX.Element {
+  const lines = content.split("\n")
   const preview = lines.slice(0, 10)
   const hasMore = lines.length > 10
 
@@ -187,7 +187,7 @@ function FileContentPreview({ content }: { content: string; path?: string }) {
             <span className="w-8 shrink-0 text-muted-foreground select-none pr-2 text-right">
               {i + 1}
             </span>
-            <span className="flex-1 min-w-0 truncate">{line || ' '}</span>
+            <span className="flex-1 min-w-0 truncate">{line || " "}</span>
           </div>
         ))}
       </pre>
@@ -201,7 +201,7 @@ function FileContentPreview({ content }: { content: string; path?: string }) {
 }
 
 // Render edit/write file summary
-function FileEditSummary({ args }: { args: Record<string, unknown> }) {
+function FileEditSummary({ args }: { args: Record<string, unknown> }): React.JSX.Element | null {
   const path = (args.path || args.file_path) as string
   const content = args.content as string | undefined
   const oldStr = args.old_str as string | undefined
@@ -213,12 +213,12 @@ function FileEditSummary({ args }: { args: Record<string, unknown> }) {
       <div className="text-xs space-y-2">
         <div className="flex items-center gap-1.5 text-status-critical">
           <span className="font-mono bg-status-critical/10 px-1.5 py-0.5 rounded">
-            - {oldStr.split('\n').length} lines
+            - {oldStr.split("\n").length} lines
           </span>
         </div>
         <div className="flex items-center gap-1.5 text-status-nominal">
           <span className="font-mono bg-status-nominal/10 px-1.5 py-0.5 rounded">
-            + {newStr.split('\n').length} lines
+            + {newStr.split("\n").length} lines
           </span>
         </div>
       </div>
@@ -226,7 +226,7 @@ function FileEditSummary({ args }: { args: Record<string, unknown> }) {
   }
 
   if (content) {
-    const lines = content.split('\n').length
+    const lines = content.split("\n").length
     return (
       <div className="text-xs text-muted-foreground">
         Writing {lines} lines to {getFileName(path)}
@@ -238,7 +238,13 @@ function FileEditSummary({ args }: { args: Record<string, unknown> }) {
 }
 
 // Command display
-function CommandDisplay({ command, output }: { command: string; output?: string }) {
+function CommandDisplay({
+  command,
+  output
+}: {
+  command: string
+  output?: string
+}): React.JSX.Element {
   return (
     <div className="text-xs space-y-2 w-full overflow-hidden">
       <div className="font-mono bg-background rounded-sm p-2 flex items-center gap-2 min-w-0">
@@ -248,7 +254,7 @@ function CommandDisplay({ command, output }: { command: string; output?: string 
       {output && (
         <pre className="font-mono bg-background rounded-sm p-2 overflow-auto max-h-32 text-muted-foreground w-full whitespace-pre-wrap break-all">
           {output.slice(0, 500)}
-          {output.length > 500 && '...'}
+          {output.length > 500 && "..."}
         </pre>
       )}
     </div>
@@ -262,7 +268,7 @@ function TaskDisplay({
 }: {
   args: Record<string, unknown>
   isExpanded?: boolean
-}) {
+}): React.JSX.Element {
   const name = args.name as string | undefined
   const description = args.description as string | undefined
 
@@ -275,7 +281,7 @@ function TaskDisplay({
         </div>
       )}
       {description && (
-        <p className={cn('text-muted-foreground pl-5', !isExpanded && 'line-clamp-2')}>
+        <p className={cn("text-muted-foreground pl-5", !isExpanded && "line-clamp-2")}>
           {description}
         </p>
       )}
@@ -289,7 +295,7 @@ export function ToolCallRenderer({
   isError,
   needsApproval,
   onApprovalDecision
-}: ToolCallRendererProps) {
+}: ToolCallRendererProps): React.JSX.Element | null {
   // Defensive: ensure args is always an object
   const args = toolCall?.args || {}
 
@@ -304,18 +310,18 @@ export function ToolCallRenderer({
   const label = TOOL_LABELS[toolCall.name] || toolCall.name
   const isPanelSynced = PANEL_SYNCED_TOOLS.has(toolCall.name)
 
-  const handleApprove = (e: React.MouseEvent) => {
+  const handleApprove = (e: React.MouseEvent): void => {
     e.stopPropagation()
-    onApprovalDecision?.('approve')
+    onApprovalDecision?.("approve")
   }
 
-  const handleReject = (e: React.MouseEvent) => {
+  const handleReject = (e: React.MouseEvent): void => {
     e.stopPropagation()
-    onApprovalDecision?.('reject')
+    onApprovalDecision?.("reject")
   }
 
   // Format the main argument for display
-  const getDisplayArg = () => {
+  const getDisplayArg = (): string | null => {
     if (!args) return null
     if (args.path) return args.path as string
     if (args.file_path) return args.file_path as string
@@ -329,11 +335,11 @@ export function ToolCallRenderer({
   const displayArg = getDisplayArg()
 
   // Render formatted content based on tool type
-  const renderFormattedContent = () => {
+  const renderFormattedContent = (): React.ReactNode => {
     if (!args) return null
 
     switch (toolCall.name) {
-      case 'write_todos': {
+      case "write_todos": {
         const todos = args.todos as Todo[] | undefined
         if (todos && todos.length > 0) {
           return <TodosDisplay todos={todos} />
@@ -341,18 +347,18 @@ export function ToolCallRenderer({
         return null
       }
 
-      case 'task': {
+      case "task": {
         return <TaskDisplay args={args} isExpanded={isExpanded} />
       }
 
-      case 'edit_file':
-      case 'write_file': {
+      case "edit_file":
+      case "write_file": {
         return <FileEditSummary args={args} />
       }
 
-      case 'execute': {
+      case "execute": {
         const command = args.command as string
-        const output = typeof result === 'string' ? result : undefined
+        const output = typeof result === "string" ? result : undefined
         return <CommandDisplay command={command} output={isExpanded ? output : undefined} />
       }
 
@@ -362,7 +368,7 @@ export function ToolCallRenderer({
   }
 
   // Render result based on tool type
-  const renderFormattedResult = () => {
+  const renderFormattedResult = (): React.ReactNode => {
     if (result === undefined) return null
 
     // Handle errors
@@ -371,16 +377,16 @@ export function ToolCallRenderer({
         <div className="text-xs text-status-critical flex items-start gap-1.5">
           <XCircle className="size-3 mt-0.5 shrink-0" />
           <span className="break-words">
-            {typeof result === 'string' ? result : JSON.stringify(result)}
+            {typeof result === "string" ? result : JSON.stringify(result)}
           </span>
         </div>
       )
     }
 
     switch (toolCall.name) {
-      case 'read_file': {
-        const content = typeof result === 'string' ? result : JSON.stringify(result)
-        const lines = content.split('\n').length
+      case "read_file": {
+        const content = typeof result === "string" ? result : JSON.stringify(result)
+        const lines = content.split("\n").length
         return (
           <div className="space-y-2">
             <div className="text-xs text-status-nominal flex items-center gap-1.5">
@@ -392,10 +398,10 @@ export function ToolCallRenderer({
         )
       }
 
-      case 'ls': {
+      case "ls": {
         if (Array.isArray(result)) {
           const dirs = result.filter(
-            (f: { is_dir?: boolean } | string) => typeof f === 'object' && f.is_dir
+            (f: { is_dir?: boolean } | string) => typeof f === "object" && f.is_dir
           ).length
           const files = result.length - dirs
           return (
@@ -403,8 +409,8 @@ export function ToolCallRenderer({
               <div className="text-xs text-status-nominal flex items-center gap-1.5">
                 <CheckCircle2 className="size-3" />
                 <span>
-                  {files} file{files !== 1 ? 's' : ''}
-                  {dirs > 0 ? `, ${dirs} folder${dirs !== 1 ? 's' : ''}` : ''}
+                  {files} file{files !== 1 ? "s" : ""}
+                  {dirs > 0 ? `, ${dirs} folder${dirs !== 1 ? "s" : ""}` : ""}
                 </span>
               </div>
               <FileListDisplay files={result} />
@@ -414,14 +420,14 @@ export function ToolCallRenderer({
         return null
       }
 
-      case 'glob': {
+      case "glob": {
         if (Array.isArray(result)) {
           return (
             <div className="space-y-2">
               <div className="text-xs text-status-nominal flex items-center gap-1.5">
                 <CheckCircle2 className="size-3" />
                 <span>
-                  Found {result.length} match{result.length !== 1 ? 'es' : ''}
+                  Found {result.length} match{result.length !== 1 ? "es" : ""}
                 </span>
               </div>
               <FileListDisplay files={result} isGlob />
@@ -431,7 +437,7 @@ export function ToolCallRenderer({
         return null
       }
 
-      case 'grep': {
+      case "grep": {
         if (Array.isArray(result)) {
           const fileCount = new Set(result.map((m: { path: string }) => m.path)).size
           return (
@@ -439,8 +445,8 @@ export function ToolCallRenderer({
               <div className="text-xs text-status-nominal flex items-center gap-1.5">
                 <CheckCircle2 className="size-3" />
                 <span>
-                  {result.length} match{result.length !== 1 ? 'es' : ''} in {fileCount} file
-                  {fileCount !== 1 ? 's' : ''}
+                  {result.length} match{result.length !== 1 ? "es" : ""} in {fileCount} file
+                  {fileCount !== 1 ? "s" : ""}
                 </span>
               </div>
               <GrepResultsDisplay matches={result} />
@@ -450,10 +456,10 @@ export function ToolCallRenderer({
         return null
       }
 
-      case 'execute': {
+      case "execute": {
         // When expanded, output is shown in CommandDisplay - just show status
         // When collapsed, show the output preview
-        const output = typeof result === 'string' ? result : JSON.stringify(result)
+        const output = typeof result === "string" ? result : JSON.stringify(result)
         if (isExpanded) {
           return (
             <div className="text-xs text-status-nominal flex items-center gap-1.5">
@@ -472,7 +478,7 @@ export function ToolCallRenderer({
               </div>
               <pre className="text-xs font-mono bg-background rounded-sm p-2 overflow-auto max-h-32 text-muted-foreground whitespace-pre-wrap break-all">
                 {output.slice(0, 500)}
-                {output.length > 500 && '...'}
+                {output.length > 500 && "..."}
               </pre>
             </div>
           )
@@ -485,14 +491,14 @@ export function ToolCallRenderer({
         )
       }
 
-      case 'write_todos':
+      case "write_todos":
         // Already shown in Tasks panel
         return null
 
-      case 'write_file':
-      case 'edit_file': {
+      case "write_file":
+      case "edit_file": {
         // Show confirmation message for file operations
-        if (typeof result === 'string' && result.trim()) {
+        if (typeof result === "string" && result.trim()) {
           return (
             <div className="text-xs text-status-nominal flex items-center gap-1.5">
               <CheckCircle2 className="size-3" />
@@ -508,9 +514,9 @@ export function ToolCallRenderer({
         )
       }
 
-      case 'task': {
+      case "task": {
         // Subagent task completion
-        if (typeof result === 'string' && result.trim()) {
+        if (typeof result === "string" && result.trim()) {
           return (
             <div className="space-y-2">
               <div className="text-xs text-status-nominal flex items-center gap-1.5">
@@ -519,7 +525,7 @@ export function ToolCallRenderer({
               </div>
               <div className="text-xs text-muted-foreground pl-5 line-clamp-3">
                 {result.slice(0, 500)}
-                {result.length > 500 && '...'}
+                {result.length > 500 && "..."}
               </div>
             </div>
           )
@@ -534,13 +540,13 @@ export function ToolCallRenderer({
 
       default: {
         // Generic success for unknown tools
-        if (typeof result === 'string' && result.trim()) {
+        if (typeof result === "string" && result.trim()) {
           return (
             <div className="text-xs text-status-nominal flex items-center gap-1.5">
               <CheckCircle2 className="size-3" />
               <span className="truncate">
                 {result.slice(0, 100)}
-                {result.length > 100 ? '...' : ''}
+                {result.length > 100 ? "..." : ""}
               </span>
             </div>
           )
@@ -562,10 +568,10 @@ export function ToolCallRenderer({
   return (
     <div
       className={cn(
-        'rounded-sm border overflow-hidden',
+        "rounded-sm border overflow-hidden",
         needsApproval
-          ? 'border-amber-500/50 bg-amber-500/5'
-          : 'border-border bg-background-elevated'
+          ? "border-amber-500/50 bg-amber-500/5"
+          : "border-border bg-background-elevated"
       )}
     >
       {/* Header */}
@@ -580,7 +586,7 @@ export function ToolCallRenderer({
         )}
 
         <Icon
-          className={cn('size-4 shrink-0', needsApproval ? 'text-amber-500' : 'text-status-info')}
+          className={cn("size-4 shrink-0", needsApproval ? "text-amber-500" : "text-status-info")}
         />
 
         <span className="text-xs font-medium shrink-0">{label}</span>
@@ -604,8 +610,8 @@ export function ToolCallRenderer({
         )}
 
         {result !== undefined && !needsApproval && (
-          <Badge variant={isError ? 'critical' : 'nominal'} className="ml-auto shrink-0">
-            {isError ? 'ERROR' : 'OK'}
+          <Badge variant={isError ? "critical" : "nominal"} className="ml-auto shrink-0">
+            {isError ? "ERROR" : "OK"}
           </Badge>
         )}
 
@@ -677,11 +683,11 @@ export function ToolCallRenderer({
               <div className="text-section-header mb-1">RAW RESULT</div>
               <pre
                 className={cn(
-                  'text-xs font-mono p-2 rounded-sm overflow-auto max-h-48 w-full whitespace-pre-wrap break-all',
-                  isError ? 'bg-status-critical/10 text-status-critical' : 'bg-background'
+                  "text-xs font-mono p-2 rounded-sm overflow-auto max-h-48 w-full whitespace-pre-wrap break-all",
+                  isError ? "bg-status-critical/10 text-status-critical" : "bg-background"
                 )}
               >
-                {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
+                {typeof result === "string" ? result : JSON.stringify(result, null, 2)}
               </pre>
             </div>
           )}

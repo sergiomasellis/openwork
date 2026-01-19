@@ -1,8 +1,8 @@
-import { User, Bot } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { Message, HITLRequest } from '@/types'
-import { ToolCallRenderer } from './ToolCallRenderer'
-import { StreamingMarkdown } from './StreamingMarkdown'
+import { User, Bot } from "lucide-react"
+import { cn } from "@/lib/utils"
+import type { Message, HITLRequest } from "@/types"
+import { ToolCallRenderer } from "./ToolCallRenderer"
+import { StreamingMarkdown } from "./StreamingMarkdown"
 
 interface ToolResultInfo {
   content: string | unknown
@@ -14,7 +14,7 @@ interface MessageBubbleProps {
   isStreaming?: boolean
   toolResults?: Map<string, ToolResultInfo>
   pendingApproval?: HITLRequest | null
-  onApprovalDecision?: (decision: 'approve' | 'reject' | 'edit') => void
+  onApprovalDecision?: (decision: "approve" | "reject" | "edit") => void
 }
 
 export function MessageBubble({
@@ -23,27 +23,27 @@ export function MessageBubble({
   toolResults,
   pendingApproval,
   onApprovalDecision
-}: MessageBubbleProps) {
-  const isUser = message.role === 'user'
-  const isTool = message.role === 'tool'
+}: MessageBubbleProps): React.JSX.Element | null {
+  const isUser = message.role === "user"
+  const isTool = message.role === "tool"
 
   // Hide tool result messages - they're shown inline with tool calls
   if (isTool) {
     return null
   }
 
-  const getIcon = () => {
+  const getIcon = (): React.JSX.Element => {
     if (isUser) return <User className="size-4" />
     return <Bot className="size-4" />
   }
 
-  const getLabel = () => {
-    if (isUser) return 'YOU'
-    return 'AGENT'
+  const getLabel = (): string => {
+    if (isUser) return "YOU"
+    return "AGENT"
   }
 
-  const renderContent = () => {
-    if (typeof message.content === 'string') {
+  const renderContent = (): React.ReactNode => {
+    if (typeof message.content === "string") {
       // Empty content
       if (!message.content.trim()) {
         return null
@@ -59,7 +59,7 @@ export function MessageBubble({
     // Handle content blocks
     const renderedBlocks = message.content
       .map((block, index) => {
-        if (block.type === 'text' && block.text) {
+        if (block.type === "text" && block.text) {
           // Use streaming markdown for assistant text blocks
           if (isUser) {
             return (
@@ -102,11 +102,11 @@ export function MessageBubble({
 
       {/* Content column - always same width */}
       <div className="flex-1 min-w-0 space-y-2 overflow-hidden">
-        <div className={cn('text-section-header', isUser && 'text-right')}>{getLabel()}</div>
+        <div className={cn("text-section-header", isUser && "text-right")}>{getLabel()}</div>
 
         {content && (
           <div
-            className={cn('rounded-sm p-3 overflow-hidden', isUser ? 'bg-primary/10' : 'bg-card')}
+            className={cn("rounded-sm p-3 overflow-hidden", isUser ? "bg-primary/10" : "bg-card")}
           >
             {content}
           </div>
@@ -121,7 +121,7 @@ export function MessageBubble({
               const needsApproval = Boolean(pendingId && pendingId === toolCall.id)
               return (
                 <ToolCallRenderer
-                  key={`${toolCall.id || `tc-${index}`}-${needsApproval ? 'pending' : 'done'}`}
+                  key={`${toolCall.id || `tc-${index}`}-${needsApproval ? "pending" : "done"}`}
                   toolCall={toolCall}
                   result={result?.content}
                   isError={result?.is_error}

@@ -11,7 +11,7 @@
  */
 export function generateTitle(message: string): string {
   // Clean up the message
-  const cleaned = message.trim().replace(/\s+/g, ' ')
+  const cleaned = message.trim().replace(/\s+/g, " ")
 
   // If already short enough, use as-is
   if (cleaned.length <= 50) {
@@ -26,18 +26,18 @@ export function generateTitle(message: string): string {
 
   // Extract first N words
   const words = cleaned.split(/\s+/)
-  let title = ''
+  let title = ""
 
   for (const word of words) {
-    if ((title + ' ' + word).length > 47) {
+    if ((title + " " + word).length > 47) {
       break
     }
-    title = title ? title + ' ' + word : word
+    title = title ? title + " " + word : word
   }
 
   // Add ellipsis if we truncated
-  if (words.join(' ').length > title.length) {
-    title += '...'
+  if (words.join(" ").length > title.length) {
+    title += "..."
   }
 
   return title

@@ -116,7 +116,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", ui-monospace, monospace;
   }
 }
 
@@ -396,7 +396,7 @@
 
 .app-badge-version {
   font-size: 11px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   color: color-mix(in srgb, var(--primary) 70%, transparent);
   line-height: 1;
 }
@@ -415,7 +415,7 @@
 }
 
 .shiki-content code {
-  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
+  font-family: "JetBrains Mono", "Fira Code", "SF Mono", ui-monospace, monospace;
   font-size: inherit;
   background: transparent !important;
 }

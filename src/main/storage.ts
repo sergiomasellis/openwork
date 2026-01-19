@@ -1,17 +1,17 @@
-import { homedir } from 'os'
-import { join } from 'path'
-import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
+import { homedir } from "os"
+import { join } from "path"
+import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from "fs"
+import type { ProviderId } from "./types"
 
-const OPENWORK_DIR = join(homedir(), '.openwork')
-const ENV_FILE = join(OPENWORK_DIR, '.env')
+const OPENWORK_DIR = join(homedir(), ".openwork")
+const ENV_FILE = join(OPENWORK_DIR, ".env")
 
 // Environment variable names for each provider
-const ENV_VAR_NAMES: Record<string, string> = {
-  anthropic: 'ANTHROPIC_API_KEY',
-  openai: 'OPENAI_API_KEY',
-  google: 'GOOGLE_API_KEY',
-  openrouter: 'OPENROUTER_API_KEY',
-  opencodezen: 'OPENCODE_API_KEY'
+const ENV_VAR_NAMES: Record<ProviderId, string> = {
+  anthropic: "ANTHROPIC_API_KEY",
+  openai: "OPENAI_API_KEY",
+  google: "GOOGLE_API_KEY",
+  ollama: "" // Ollama doesn't require an API key
 }
 
 export function getOpenworkDir(): string {
@@ -22,15 +22,15 @@ export function getOpenworkDir(): string {
 }
 
 export function getDbPath(): string {
-  return join(getOpenworkDir(), 'openwork.sqlite')
+  return join(getOpenworkDir(), "openwork.sqlite")
 }
 
 export function getCheckpointDbPath(): string {
-  return join(getOpenworkDir(), 'langgraph.sqlite')
+  return join(getOpenworkDir(), "langgraph.sqlite")
 }
 
 export function getThreadCheckpointDir(): string {
-  const dir = join(getOpenworkDir(), 'threads')
+  const dir = join(getOpenworkDir(), "threads")
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true })
   }
@@ -57,13 +57,13 @@ function parseEnvFile(): Record<string, string> {
   const envPath = getEnvFilePath()
   if (!existsSync(envPath)) return {}
 
-  const content = readFileSync(envPath, 'utf-8')
+  const content = readFileSync(envPath, "utf-8")
   const result: Record<string, string> = {}
 
-  for (const line of content.split('\n')) {
+  for (const line of content.split("\n")) {
     const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) continue
-    const eqIndex = trimmed.indexOf('=')
+    if (!trimmed || trimmed.startsWith("#")) continue
+    const eqIndex = trimmed.indexOf("=")
     if (eqIndex > 0) {
       const key = trimmed.slice(0, eqIndex).trim()
       const value = trimmed.slice(eqIndex + 1).trim()
@@ -77,9 +77,9 @@ function parseEnvFile(): Record<string, string> {
 function writeEnvFile(env: Record<string, string>): void {
   getOpenworkDir() // ensure dir exists
   const lines = Object.entries(env)
-    .filter(([_, v]) => v)
+    .filter((entry) => entry[1])
     .map(([k, v]) => `${k}=${v}`)
-  writeFileSync(getEnvFilePath(), lines.join('\n') + '\n')
+  writeFileSync(getEnvFilePath(), lines.join("\n") + "\n")
 }
 
 // API key management
@@ -121,40 +121,4 @@ export function deleteApiKey(provider: string): void {
 
 export function hasApiKey(provider: string): boolean {
   return !!getApiKey(provider)
-}
-
-// Settings management
-const SETTINGS_KEY_PREFIX = 'SETTING_'
-
-export function getSetting(key: string): string | undefined {
-  const envKey = SETTINGS_KEY_PREFIX + key.toUpperCase()
-  const env = parseEnvFile()
-  return env[envKey] || process.env[envKey]
-}
-
-export function setSetting(key: string, value: string): void {
-  const envKey = SETTINGS_KEY_PREFIX + key.toUpperCase()
-  const env = parseEnvFile()
-  env[envKey] = value
-  writeEnvFile(env)
-  process.env[envKey] = value
-}
-
-export function getBooleanSetting(key: string, defaultValue: boolean = false): boolean {
-  const value = getSetting(key)
-  if (value === undefined) return defaultValue
-  return value === 'true' || value === '1'
-}
-
-export function setBooleanSetting(key: string, value: boolean): void {
-  setSetting(key, value ? 'true' : 'false')
-}
-
-// Specific setting for auto-approve permissions
-export function getAutoApproveEnabled(): boolean {
-  return getBooleanSetting('AUTO_APPROVE_PERMISSIONS', false)
-}
-
-export function setAutoApproveEnabled(enabled: boolean): void {
-  setBooleanSetting('AUTO_APPROVE_PERMISSIONS', enabled)
 }

@@ -1,5 +1,5 @@
-import { useCallback, useRef } from 'react'
-import { GripVertical } from 'lucide-react'
+import { useCallback, useRef } from "react"
+import { GripVertical } from "lucide-react"
 
 const HANDLE_WIDTH = 6 // px
 
@@ -22,16 +22,16 @@ export function ResizeHandle({ onDrag }: ResizeHandleProps) {
       }
 
       const handleMouseUp = () => {
-        document.removeEventListener('mousemove', handleMouseMove)
-        document.removeEventListener('mouseup', handleMouseUp)
-        document.body.style.cursor = ''
-        document.body.style.userSelect = ''
+        document.removeEventListener("mousemove", handleMouseMove)
+        document.removeEventListener("mouseup", handleMouseUp)
+        document.body.style.cursor = ""
+        document.body.style.userSelect = ""
       }
 
-      document.addEventListener('mousemove', handleMouseMove)
-      document.addEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = 'col-resize'
-      document.body.style.userSelect = 'none'
+      document.addEventListener("mousemove", handleMouseMove)
+      document.addEventListener("mouseup", handleMouseUp)
+      document.body.style.cursor = "col-resize"
+      document.body.style.userSelect = "none"
     },
     [onDrag]
   )

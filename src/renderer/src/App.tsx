@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react'
-import { ThreadSidebar } from '@/components/sidebar/ThreadSidebar'
-import { TabbedPanel, TabBar } from '@/components/tabs'
-import { RightPanel } from '@/components/panels/RightPanel'
-import { ResizeHandle } from '@/components/ui/resizable'
-import { useAppStore } from '@/lib/store'
-import { ThreadProvider } from '@/lib/thread-context'
+import { useEffect, useState, useCallback, useRef, useLayoutEffect } from "react"
+import { ThreadSidebar } from "@/components/sidebar/ThreadSidebar"
+import { TabbedPanel, TabBar } from "@/components/tabs"
+import { RightPanel } from "@/components/panels/RightPanel"
+import { ResizeHandle } from "@/components/ui/resizable"
+import { useAppStore } from "@/lib/store"
+import { ThreadProvider } from "@/lib/thread-context"
 
 // Badge requires ~235 screen pixels to display with comfortable margin
 const BADGE_MIN_SCREEN_WIDTH = 235
@@ -42,13 +42,13 @@ function App(): React.JSX.Element {
         const extraPaddingScreen = Math.max(0, TRAFFIC_LIGHT_BOTTOM_SCREEN - titlebarScreenHeight)
         const extraPaddingCss = Math.round(extraPaddingScreen / detectedZoom)
 
-        document.documentElement.style.setProperty('--sidebar-safe-padding', `${extraPaddingCss}px`)
+        document.documentElement.style.setProperty("--sidebar-safe-padding", `${extraPaddingCss}px`)
       }
     }
 
     updateZoom()
-    window.addEventListener('resize', updateZoom)
-    return () => window.removeEventListener('resize', updateZoom)
+    window.addEventListener("resize", updateZoom)
+    return () => window.removeEventListener("resize", updateZoom)
   }, [])
 
   // Calculate zoom-compensated minimum width to always contain the badge
@@ -88,8 +88,8 @@ function App(): React.JSX.Element {
     const handleMouseUp = (): void => {
       dragStartWidths.current = null
     }
-    document.addEventListener('mouseup', handleMouseUp)
-    return () => document.removeEventListener('mouseup', handleMouseUp)
+    document.addEventListener("mouseup", handleMouseUp)
+    return () => document.removeEventListener("mouseup", handleMouseUp)
   }, [])
 
   useEffect(() => {
@@ -102,7 +102,7 @@ function App(): React.JSX.Element {
           await createThread()
         }
       } catch (error) {
-        console.error('Failed to initialize:', error)
+        console.error("Failed to initialize:", error)
       } finally {
         setIsLoading(false)
       }
@@ -130,7 +130,7 @@ function App(): React.JSX.Element {
             top: `${14 / zoomLevel}px`,
             left: `${82 / zoomLevel}px`,
             transform: `scale(${1 / zoomLevel})`,
-            transformOrigin: 'top left'
+            transformOrigin: "top left"
           }}
         >
           <span className="app-badge-name">OPENWORK</span>
