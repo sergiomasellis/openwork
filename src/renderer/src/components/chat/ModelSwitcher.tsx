@@ -129,17 +129,17 @@ export function ModelSwitcher({ threadId }: ModelSwitcherProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+            className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground max-w-[200px]"
           >
             {selectedModel ? (
               <>
-                {PROVIDER_ICONS[selectedModel.provider]?.({ className: 'size-3.5' })}
-                <span className="font-mono">{selectedModel.id}</span>
+                {PROVIDER_ICONS[selectedModel.provider]?.({ className: 'size-3.5 shrink-0' })}
+                <span className="font-mono truncate">{selectedModel.name}</span>
               </>
             ) : (
               <span>Select model</span>
             )}
-            <ChevronDown className="size-3" />
+            <ChevronDown className="size-3 shrink-0" />
           </Button>
         </PopoverTrigger>
         <PopoverContent 
@@ -201,19 +201,20 @@ export function ModelSwitcher({ threadId }: ModelSwitcherProps) {
               ) : (
                 // Show models list with scrollable area
                 <div className="flex flex-col h-[200px]">
-                  <div className="overflow-y-auto flex-1 space-y-0.5">
+                  <div className="overflow-y-auto overflow-x-hidden flex-1 space-y-0.5">
                     {filteredModels.map((model) => (
                       <button
                         key={model.id}
                         onClick={() => handleModelSelect(model.id)}
+                        title={model.id}
                         className={cn(
-                          "w-full flex items-center gap-1.5 px-2 py-1 rounded-sm text-xs transition-colors text-left font-mono",
+                          "w-full flex items-center gap-1.5 px-2 py-1 rounded-sm text-xs transition-colors text-left",
                           currentModel === model.id
                             ? "bg-muted text-foreground"
                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         )}
                       >
-                        <span className="flex-1 truncate">{model.id}</span>
+                        <span className="flex-1 truncate min-w-0">{model.name}</span>
                         {currentModel === model.id && (
                           <Check className="size-3.5 shrink-0 text-foreground" />
                         )}

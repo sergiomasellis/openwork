@@ -12,6 +12,88 @@ const store = new Store({
   cwd: getOpenworkDir()
 })
 
+// Cache for OpenRouter models from models.dev API
+let openRouterModelsCache: ModelConfig[] | null = null
+let openRouterModelsCacheTime: number = 0
+const CACHE_TTL_MS = 1000 * 60 * 60 * 24 // 24 hour cache
+
+// Type for models.dev API response
+interface ModelsDevModel {
+  id: string
+  name: string
+  tool_call?: boolean
+  reasoning?: boolean
+  modalities?: {
+    input?: string[]
+    output?: string[]
+  }
+  cost?: {
+    input?: number
+    output?: number
+  }
+  limit?: {
+    context?: number
+    output?: number
+  }
+}
+
+interface ModelsDevProvider {
+  id: string
+  name: string
+  models: Record<string, ModelsDevModel>
+}
+
+interface ModelsDevResponse {
+  openrouter?: ModelsDevProvider
+  [key: string]: ModelsDevProvider | undefined
+}
+
+// Fetch OpenRouter models from models.dev API
+async function fetchOpenRouterModels(): Promise<ModelConfig[]> {
+  // Return cached models if still valid
+  if (openRouterModelsCache && Date.now() - openRouterModelsCacheTime < CACHE_TTL_MS) {
+    return openRouterModelsCache
+  }
+
+  try {
+    const response = await fetch('https://models.dev/api.json')
+    if (!response.ok) {
+      console.warn(`Failed to fetch models.dev API: ${response.status}`)
+      return openRouterModelsCache || []
+    }
+
+    const data: ModelsDevResponse = await response.json()
+    const openrouter = data.openrouter
+
+    if (!openrouter || !openrouter.models) {
+      console.warn('No openrouter provider found in models.dev API')
+      return openRouterModelsCache || []
+    }
+
+    // Filter models that support tool calls (required for agent use)
+    const models: ModelConfig[] = Object.values(openrouter.models)
+      .filter((model) => model.tool_call === true)
+      .map((model) => ({
+        id: `openrouter/${model.id}`,
+        name: `${model.name} (OpenRouter)`,
+        provider: 'openrouter' as const,
+        model: model.id,
+        description: `${model.name} via OpenRouter`,
+        available: true
+      }))
+
+    // Update cache
+    openRouterModelsCache = models
+    openRouterModelsCacheTime = Date.now()
+
+    console.log(`Fetched ${models.length} OpenRouter models from models.dev API`)
+    return models
+  } catch (error) {
+    console.warn('Error fetching OpenRouter models:', error)
+    return openRouterModelsCache || []
+  }
+}
+
 // Provider configurations
 const PROVIDERS: Omit<Provider, 'hasApiKey'>[] = [
   { id: 'anthropic', name: 'Anthropic' },
@@ -196,86 +278,23 @@ const AVAILABLE_MODELS: ModelConfig[] = [
     description: 'Fast, low-cost, high-performance model',
     available: true
   },
-  // OpenRouter models (access multiple providers through one API)
-  {
-    id: 'openrouter/anthropic/claude-sonnet-4',
-    name: 'Claude Sonnet 4 (OpenRouter)',
-    provider: 'openrouter',
-    model: 'anthropic/claude-sonnet-4',
-    description: 'Claude Sonnet 4 via OpenRouter',
-    available: true
-  },
-  {
-    id: 'openrouter/anthropic/claude-3.5-sonnet',
-    name: 'Claude 3.5 Sonnet (OpenRouter)',
-    provider: 'openrouter',
-    model: 'anthropic/claude-3.5-sonnet',
-    description: 'Claude 3.5 Sonnet via OpenRouter',
-    available: true
-  },
-  {
-    id: 'openrouter/openai/gpt-4o',
-    name: 'GPT-4o (OpenRouter)',
-    provider: 'openrouter',
-    model: 'openai/gpt-4o',
-    description: 'GPT-4o via OpenRouter',
-    available: true
-  },
-  {
-    id: 'openrouter/openai/gpt-4o-mini',
-    name: 'GPT-4o Mini (OpenRouter)',
-    provider: 'openrouter',
-    model: 'openai/gpt-4o-mini',
-    description: 'GPT-4o Mini via OpenRouter',
-    available: true
-  },
-  {
-    id: 'openrouter/google/gemini-2.5-pro-preview',
-    name: 'Gemini 2.5 Pro (OpenRouter)',
-    provider: 'openrouter',
-    model: 'google/gemini-2.5-pro-preview-05-06',
-    description: 'Gemini 2.5 Pro Preview via OpenRouter',
-    available: true
-  },
-  {
-    id: 'openrouter/google/gemini-2.5-flash-preview',
-    name: 'Gemini 2.5 Flash (OpenRouter)',
-    provider: 'openrouter',
-    model: 'google/gemini-2.5-flash-preview-05-20',
-    description: 'Gemini 2.5 Flash Preview via OpenRouter',
-    available: true
-  },
-  {
-    id: 'openrouter/meta-llama/llama-3.3-70b-instruct',
-    name: 'Llama 3.3 70B (OpenRouter)',
-    provider: 'openrouter',
-    model: 'meta-llama/llama-3.3-70b-instruct',
-    description: 'Meta Llama 3.3 70B Instruct via OpenRouter',
-    available: true
-  },
-  {
-    id: 'openrouter/deepseek/deepseek-chat-v3-0324',
-    name: 'DeepSeek V3 (OpenRouter)',
-    provider: 'openrouter',
-    model: 'deepseek/deepseek-chat-v3-0324',
-    description: 'DeepSeek Chat V3 via OpenRouter',
-    available: true
-  },
-  {
-    id: 'openrouter/qwen/qwen-2.5-coder-32b-instruct',
-    name: 'Qwen 2.5 Coder 32B (OpenRouter)',
-    provider: 'openrouter',
-    model: 'qwen/qwen-2.5-coder-32b-instruct',
-    description: 'Qwen 2.5 Coder 32B Instruct via OpenRouter',
-    available: true
-  }
+  // OpenRouter models are fetched dynamically from models.dev API
 ]
+
+// Static models (non-OpenRouter providers)
+const STATIC_MODELS = AVAILABLE_MODELS
 
 export function registerModelHandlers(ipcMain: IpcMain): void {
   // List available models
   ipcMain.handle('models:list', async () => {
+    // Fetch OpenRouter models dynamically
+    const openRouterModels = await fetchOpenRouterModels()
+
+    // Combine static models with dynamic OpenRouter models
+    const allModels = [...STATIC_MODELS, ...openRouterModels]
+
     // Check which models have API keys configured
-    return AVAILABLE_MODELS.map((model) => ({
+    return allModels.map((model) => ({
       ...model,
       available: hasApiKey(model.provider)
     }))
