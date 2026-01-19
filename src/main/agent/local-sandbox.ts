@@ -104,7 +104,6 @@ export class LocalSandbox extends FilesystemBackend implements SandboxBackendPro
 
       // Determine shell based on platform
       const isWindows = process.platform === 'win32'
-      const shell = isWindows ? 'cmd.exe' : '/bin/sh'
 
       // Convert forward slashes to backslashes in Windows paths for cmd.exe compatibility
       // This handles paths like "C:/Users/..." which need to be "C:\Users\..." for Windows commands
@@ -118,7 +117,40 @@ export class LocalSandbox extends FilesystemBackend implements SandboxBackendPro
         )
       }
 
-      const shellArgs = isWindows ? ['/c', processedCommand] : ['-c', command]
+      // Determine shell and arguments
+      let shell: string
+      let shellArgs: string[]
+
+      if (isWindows) {
+        // Check if command is a PowerShell command - run it directly via powershell.exe
+        // to avoid cmd.exe interpreting $ variables (e.g., $_ becomes empty)
+        const isPowerShellCommand = /^powershell(?:\.exe)?\s+/i.test(processedCommand)
+
+        if (isPowerShellCommand) {
+          // Extract the PowerShell arguments after "powershell" or "powershell.exe"
+          const psArgs = processedCommand.replace(/^powershell(?:\.exe)?\s+/i, '')
+          shell = 'powershell.exe'
+          // Parse the -Command argument if present, otherwise pass as-is
+          if (/^-Command\s+/i.test(psArgs)) {
+            let cmdContent = psArgs.replace(/^-Command\s+/i, '')
+            // Remove surrounding quotes that were meant for cmd.exe parsing
+            // PowerShell receives the command directly, so we need to unwrap it
+            if ((cmdContent.startsWith('"') && cmdContent.endsWith('"')) ||
+                (cmdContent.startsWith("'") && cmdContent.endsWith("'"))) {
+              cmdContent = cmdContent.slice(1, -1)
+            }
+            shellArgs = ['-NoProfile', '-NonInteractive', '-Command', cmdContent]
+          } else {
+            shellArgs = ['-NoProfile', '-NonInteractive', '-Command', psArgs]
+          }
+        } else {
+          shell = 'cmd.exe'
+          shellArgs = ['/c', processedCommand]
+        }
+      } else {
+        shell = '/bin/sh'
+        shellArgs = ['-c', command]
+      }
 
       const proc = spawn(shell, shellArgs, {
         cwd: this.workingDir,
