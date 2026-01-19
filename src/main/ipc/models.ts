@@ -75,7 +75,7 @@ async function fetchOpenRouterModels(): Promise<ModelConfig[]> {
       .filter((model) => model.tool_call === true)
       .map((model) => ({
         id: `openrouter/${model.id}`,
-        name: `${model.name} (OpenRouter)`,
+        name: model.name,
         provider: 'openrouter' as const,
         model: model.id,
         description: `${model.name} via OpenRouter`,

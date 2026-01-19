@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { ChevronDown, Check, AlertCircle, Key } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { ChevronDown, Check, AlertCircle, Key, Search } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/lib/store'
@@ -66,7 +66,8 @@ export function ModelSwitcher({ threadId }: ModelSwitcherProps) {
   const [selectedProviderId, setSelectedProviderId] = useState<ProviderId | null>(null)
   const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false)
   const [apiKeyProvider, setApiKeyProvider] = useState<Provider | null>(null)
-  
+  const [modelFilter, setModelFilter] = useState('')
+
   const { models, providers, loadModels, loadProviders } = useAppStore()
   const { currentModel, setCurrentModel } = useCurrentThread(threadId)
 
@@ -94,10 +95,22 @@ export function ModelSwitcher({ threadId }: ModelSwitcherProps) {
   }, [currentModel, models, selectedProviderId, displayProviders])
 
   const selectedModel = models.find(m => m.id === currentModel)
-  const filteredModels = selectedProviderId 
-    ? models.filter(m => m.provider === selectedProviderId)
-    : []
+  const filteredModels = useMemo(() => {
+    if (!selectedProviderId) return []
+    const providerModels = models.filter(m => m.provider === selectedProviderId)
+    if (!modelFilter.trim()) return providerModels
+    const lowerFilter = modelFilter.toLowerCase()
+    return providerModels.filter(m =>
+      m.name.toLowerCase().includes(lowerFilter) ||
+      m.id.toLowerCase().includes(lowerFilter)
+    )
+  }, [models, selectedProviderId, modelFilter])
   const selectedProvider = displayProviders.find(p => p.id === selectedProviderId)
+
+  // Clear filter when provider changes
+  useEffect(() => {
+    setModelFilter('')
+  }, [selectedProviderId])
 
   function handleProviderClick(provider: Provider) {
     setSelectedProviderId(provider.id)
@@ -179,11 +192,25 @@ export function ModelSwitcher({ threadId }: ModelSwitcherProps) {
             </div>
 
             {/* Models column */}
-            <div className="flex-1 p-2">
+            <div className="flex-1 p-2 flex flex-col">
               <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 py-1.5">
                 Model
               </div>
-              
+
+              {/* Filter input */}
+              {selectedProvider?.hasApiKey && (
+                <div className="relative mb-2">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Filter models..."
+                    value={modelFilter}
+                    onChange={(e) => setModelFilter(e.target.value)}
+                    className="w-full h-7 pl-7 pr-2 text-xs bg-muted/50 border border-border rounded-sm focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
+                  />
+                </div>
+              )}
+
               {selectedProvider && !selectedProvider.hasApiKey ? (
                 // No API key configured
                 <div className="flex flex-col items-center justify-center h-[180px] px-4 text-center">
