@@ -1,17 +1,17 @@
 import { homedir } from "os"
 import { join } from "path"
 import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from "fs"
-import type { ProviderId } from "./types"
 
 const OPENWORK_DIR = join(homedir(), ".openwork")
 const ENV_FILE = join(OPENWORK_DIR, ".env")
 
 // Environment variable names for each provider
-const ENV_VAR_NAMES: Record<ProviderId, string> = {
+const ENV_VAR_NAMES: Record<string, string> = {
   anthropic: "ANTHROPIC_API_KEY",
   openai: "OPENAI_API_KEY",
   google: "GOOGLE_API_KEY",
-  ollama: "" // Ollama doesn't require an API key
+  openrouter: "OPENROUTER_API_KEY",
+  opencodezen: "OPENCODE_API_KEY"
 }
 
 export function getOpenworkDir(): string {
@@ -77,7 +77,7 @@ function parseEnvFile(): Record<string, string> {
 function writeEnvFile(env: Record<string, string>): void {
   getOpenworkDir() // ensure dir exists
   const lines = Object.entries(env)
-    .filter((entry) => entry[1])
+    .filter(([_, v]) => v)
     .map(([k, v]) => `${k}=${v}`)
   writeFileSync(getEnvFilePath(), lines.join("\n") + "\n")
 }
@@ -121,4 +121,40 @@ export function deleteApiKey(provider: string): void {
 
 export function hasApiKey(provider: string): boolean {
   return !!getApiKey(provider)
+}
+
+// Settings management
+const SETTINGS_KEY_PREFIX = "SETTING_"
+
+export function getSetting(key: string): string | undefined {
+  const envKey = SETTINGS_KEY_PREFIX + key.toUpperCase()
+  const env = parseEnvFile()
+  return env[envKey] || process.env[envKey]
+}
+
+export function setSetting(key: string, value: string): void {
+  const envKey = SETTINGS_KEY_PREFIX + key.toUpperCase()
+  const env = parseEnvFile()
+  env[envKey] = value
+  writeEnvFile(env)
+  process.env[envKey] = value
+}
+
+export function getBooleanSetting(key: string, defaultValue: boolean = false): boolean {
+  const value = getSetting(key)
+  if (value === undefined) return defaultValue
+  return value === "true" || value === "1"
+}
+
+export function setBooleanSetting(key: string, value: boolean): void {
+  setSetting(key, value ? "true" : "false")
+}
+
+// Specific setting for auto-approve permissions
+export function getAutoApproveEnabled(): boolean {
+  return getBooleanSetting("AUTO_APPROVE_PERMISSIONS", false)
+}
+
+export function setAutoApproveEnabled(enabled: boolean): void {
+  setBooleanSetting("AUTO_APPROVE_PERMISSIONS", enabled)
 }

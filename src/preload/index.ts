@@ -152,10 +152,10 @@ const api = {
   },
   settings: {
     getAutoApprove: (): Promise<boolean> => {
-      return ipcRenderer.invoke('settings:getAutoApprove')
+      return ipcRenderer.invoke("settings:getAutoApprove")
     },
     setAutoApprove: (enabled: boolean): Promise<void> => {
-      return ipcRenderer.invoke('settings:setAutoApprove', enabled)
+      return ipcRenderer.invoke("settings:setAutoApprove", enabled)
     }
   },
   workspace: {

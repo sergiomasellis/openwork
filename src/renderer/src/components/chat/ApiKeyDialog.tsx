@@ -21,14 +21,12 @@ interface ApiKeyDialogProps {
 const PROVIDER_INFO: Record<string, { placeholder: string; envVar: string }> = {
   anthropic: { placeholder: "sk-ant-...", envVar: "ANTHROPIC_API_KEY" },
   openai: { placeholder: "sk-...", envVar: "OPENAI_API_KEY" },
-  google: { placeholder: "AIza...", envVar: "GOOGLE_API_KEY" }
+  google: { placeholder: "AIza...", envVar: "GOOGLE_API_KEY" },
+  openrouter: { placeholder: "sk-or-...", envVar: "OPENROUTER_API_KEY" },
+  opencodezen: { placeholder: "sk-...", envVar: "OPENCODE_API_KEY" }
 }
 
-export function ApiKeyDialog({
-  open,
-  onOpenChange,
-  provider
-}: ApiKeyDialogProps): React.JSX.Element | null {
+export function ApiKeyDialog({ open, onOpenChange, provider }: ApiKeyDialogProps) {
   const [apiKey, setApiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -50,7 +48,7 @@ export function ApiKeyDialog({
 
   const info = PROVIDER_INFO[provider.id] || { placeholder: "...", envVar: "" }
 
-  async function handleSave(): Promise<void> {
+  async function handleSave() {
     if (!apiKey.trim()) return
     if (!provider) return
 
@@ -67,7 +65,7 @@ export function ApiKeyDialog({
     }
   }
 
-  async function handleDelete(): Promise<void> {
+  async function handleDelete() {
     if (!provider) return
     setDeleting(true)
     try {

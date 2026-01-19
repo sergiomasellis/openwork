@@ -1,61 +1,6 @@
 // Thread types matching langgraph-api
 export type ThreadStatus = "idle" | "busy" | "interrupted" | "error"
 
-// =============================================================================
-// IPC Handler Parameter Types
-// =============================================================================
-
-// Agent IPC
-export interface AgentInvokeParams {
-  threadId: string
-  message: string
-  modelId?: string
-}
-
-export interface AgentResumeParams {
-  threadId: string
-  command: { resume?: { decision?: string } }
-  modelId?: string
-}
-
-export interface AgentInterruptParams {
-  threadId: string
-  decision: HITLDecision
-}
-
-export interface AgentCancelParams {
-  threadId: string
-}
-
-// Thread IPC
-export interface ThreadUpdateParams {
-  threadId: string
-  updates: Partial<Thread>
-}
-
-// Workspace IPC
-export interface WorkspaceSetParams {
-  threadId?: string
-  path: string | null
-}
-
-export interface WorkspaceLoadParams {
-  threadId: string
-}
-
-export interface WorkspaceFileParams {
-  threadId: string
-  filePath: string
-}
-
-// Model IPC
-export interface SetApiKeyParams {
-  provider: string
-  apiKey: string
-}
-
-// =============================================================================
-
 export interface Thread {
   thread_id: string
   created_at: Date
@@ -80,7 +25,7 @@ export interface Run {
 }
 
 // Provider configuration
-export type ProviderId = "anthropic" | "openai" | "google" | "ollama"
+export type ProviderId = "anthropic" | "openai" | "google" | "ollama" | "openrouter" | "opencodezen"
 
 export interface Provider {
   id: ProviderId

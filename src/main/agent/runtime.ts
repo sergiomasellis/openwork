@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { createDeepAgent } from "deepagents"
 import { getDefaultModel } from "../ipc/models"
-import { getApiKey, getThreadCheckpointPath } from "../storage"
+import { getApiKey, getThreadCheckpointPath, getAutoApproveEnabled } from "../storage"
 import { ChatAnthropic } from "@langchain/anthropic"
 import { ChatOpenAI } from "@langchain/openai"
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
@@ -89,7 +89,7 @@ function getModelInstance(
     }
     return new ChatOpenAI({
       model,
-      openAIApiKey: apiKey
+      apiKey: apiKey
     })
   } else if (model.startsWith("gemini")) {
     const apiKey = getApiKey("google")
@@ -100,6 +100,40 @@ function getModelInstance(
     return new ChatGoogleGenerativeAI({
       model,
       apiKey: apiKey
+    })
+  } else if (model.startsWith("openrouter/")) {
+    // OpenRouter models use format: openrouter/provider/model-name
+    // Extract the actual model name (everything after 'openrouter/')
+    const openRouterModel = model.replace("openrouter/", "")
+    const openRouterApiKey = getApiKey("openrouter")
+    console.log("[Runtime] OpenRouter API key present:", !!openRouterApiKey)
+    if (!openRouterApiKey) {
+      throw new Error("OpenRouter API key not configured")
+    }
+    // OpenRouter uses OpenAI-compatible API
+    return new ChatOpenAI({
+      model: openRouterModel,
+      apiKey: openRouterApiKey,
+      configuration: {
+        baseURL: "https://openrouter.ai/api/v1"
+      }
+    })
+  } else if (model.startsWith("opencodezen/")) {
+    // OpenCode Zen models use format: opencodezen/model-name
+    // Extract the actual model name (everything after 'opencodezen/')
+    const openCodeZenModel = model.replace("opencodezen/", "")
+    const openCodeZenApiKey = getApiKey("opencodezen")
+    console.log("[Runtime] OpenCode Zen API key present:", !!openCodeZenApiKey)
+    if (!openCodeZenApiKey) {
+      throw new Error("OpenCode Zen API key not configured")
+    }
+    // OpenCode Zen uses OpenAI-compatible API
+    return new ChatOpenAI({
+      model: openCodeZenModel,
+      apiKey: openCodeZenApiKey,
+      configuration: {
+        baseURL: "https://opencode.ai/zen/v1"
+      }
     })
   }
 
@@ -119,6 +153,7 @@ export interface CreateAgentRuntimeOptions {
 // Create agent runtime with configured model and checkpointer
 export type AgentRuntime = ReturnType<typeof createDeepAgent>
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function createAgentRuntime(options: CreateAgentRuntimeOptions) {
   const { threadId, modelId, workspacePath } = options
 
@@ -163,6 +198,10 @@ export async function createAgentRuntime(options: CreateAgentRuntimeOptions) {
 
 The workspace root is: ${workspacePath}`
 
+  // Check if auto-approve is enabled (bypass all permissions)
+  const autoApproveEnabled = getAutoApproveEnabled()
+  console.log("[Runtime] Auto-approve enabled:", autoApproveEnabled)
+
   const agent = createDeepAgent({
     model,
     checkpointer,
@@ -170,8 +209,8 @@ The workspace root is: ${workspacePath}`
     systemPrompt,
     // Custom filesystem prompt for absolute paths (requires deepagents update)
     filesystemSystemPrompt,
-    // Require human approval for all shell commands
-    interruptOn: { execute: true }
+    // Require human approval for all shell commands (unless auto-approve is enabled)
+    interruptOn: autoApproveEnabled ? undefined : { execute: true }
   } as Parameters<typeof createDeepAgent>[0])
 
   console.log("[Runtime] Deep agent created with LocalSandbox at:", workspacePath)

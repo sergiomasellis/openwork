@@ -2,16 +2,17 @@ import { IpcMain, dialog, app } from "electron"
 import Store from "electron-store"
 import * as fs from "fs/promises"
 import * as path from "path"
-import type {
-  ModelConfig,
-  Provider,
-  SetApiKeyParams,
-  WorkspaceSetParams,
-  WorkspaceLoadParams,
-  WorkspaceFileParams
-} from "../types"
+import type { ModelConfig, Provider } from "../types"
 import { startWatching, stopWatching } from "../services/workspace-watcher"
-import { getOpenworkDir, getApiKey, setApiKey, deleteApiKey, hasApiKey } from "../storage"
+import {
+  getOpenworkDir,
+  getApiKey,
+  setApiKey,
+  deleteApiKey,
+  hasApiKey,
+  getAutoApproveEnabled,
+  setAutoApproveEnabled
+} from "../storage"
 
 // Store for non-sensitive settings only (no encryption needed)
 const store = new Store({
@@ -19,11 +20,146 @@ const store = new Store({
   cwd: getOpenworkDir()
 })
 
+// Cache for OpenRouter models from models.dev API
+let openRouterModelsCache: ModelConfig[] | null = null
+let openRouterModelsCacheTime: number = 0
+const CACHE_TTL_MS = 1000 * 60 * 60 * 24 // 24 hour cache
+
+// Cache for OpenCode Zen models from models.dev API
+let openCodeZenModelsCache: ModelConfig[] | null = null
+let openCodeZenModelsCacheTime: number = 0
+
+// Type for models.dev API response
+interface ModelsDevModel {
+  id: string
+  name: string
+  tool_call?: boolean
+  reasoning?: boolean
+  modalities?: {
+    input?: string[]
+    output?: string[]
+  }
+  cost?: {
+    input?: number
+    output?: number
+  }
+  limit?: {
+    context?: number
+    output?: number
+  }
+}
+
+interface ModelsDevProvider {
+  id: string
+  name: string
+  models: Record<string, ModelsDevModel>
+}
+
+interface ModelsDevResponse {
+  openrouter?: ModelsDevProvider
+  opencode?: ModelsDevProvider
+  [key: string]: ModelsDevProvider | undefined
+}
+
+// Fetch OpenRouter models from models.dev API
+async function fetchOpenRouterModels(): Promise<ModelConfig[]> {
+  // Return cached models if still valid
+  if (openRouterModelsCache && Date.now() - openRouterModelsCacheTime < CACHE_TTL_MS) {
+    return openRouterModelsCache
+  }
+
+  try {
+    const response = await fetch("https://models.dev/api.json")
+    if (!response.ok) {
+      console.warn(`Failed to fetch models.dev API: ${response.status}`)
+      return openRouterModelsCache || []
+    }
+
+    const data: ModelsDevResponse = await response.json()
+    const openrouter = data.openrouter
+
+    if (!openrouter || !openrouter.models) {
+      console.warn("No openrouter provider found in models.dev API")
+      return openRouterModelsCache || []
+    }
+
+    // Filter models that support tool calls (required for agent use)
+    const models: ModelConfig[] = Object.values(openrouter.models)
+      .filter((model) => model.tool_call === true)
+      .map((model) => ({
+        id: `openrouter/${model.id}`,
+        name: model.name,
+        provider: "openrouter" as const,
+        model: model.id,
+        description: `${model.name} via OpenRouter`,
+        available: true
+      }))
+
+    // Update cache
+    openRouterModelsCache = models
+    openRouterModelsCacheTime = Date.now()
+
+    console.log(`Fetched ${models.length} OpenRouter models from models.dev API`)
+    return models
+  } catch (error) {
+    console.warn("Error fetching OpenRouter models:", error)
+    return openRouterModelsCache || []
+  }
+}
+
+// Fetch OpenCode Zen models from models.dev API
+async function fetchOpenCodeZenModels(): Promise<ModelConfig[]> {
+  // Return cached models if still valid
+  if (openCodeZenModelsCache && Date.now() - openCodeZenModelsCacheTime < CACHE_TTL_MS) {
+    return openCodeZenModelsCache
+  }
+
+  try {
+    const response = await fetch("https://models.dev/api.json")
+    if (!response.ok) {
+      console.warn(`Failed to fetch models.dev API: ${response.status}`)
+      return openCodeZenModelsCache || []
+    }
+
+    const data: ModelsDevResponse = await response.json()
+    const opencode = data.opencode
+
+    if (!opencode || !opencode.models) {
+      console.warn("No opencode provider found in models.dev API")
+      return openCodeZenModelsCache || []
+    }
+
+    // Filter models that support tool calls (required for agent use)
+    const models: ModelConfig[] = Object.values(opencode.models)
+      .filter((model) => model.tool_call === true)
+      .map((model) => ({
+        id: `opencodezen/${model.id}`,
+        name: model.name,
+        provider: "opencodezen" as const,
+        model: model.id,
+        description: `${model.name} via OpenCode Zen`,
+        available: true
+      }))
+
+    // Update cache
+    openCodeZenModelsCache = models
+    openCodeZenModelsCacheTime = Date.now()
+
+    console.log(`Fetched ${models.length} OpenCode Zen models from models.dev API`)
+    return models
+  } catch (error) {
+    console.warn("Error fetching OpenCode Zen models:", error)
+    return openCodeZenModelsCache || []
+  }
+}
+
 // Provider configurations
 const PROVIDERS: Omit<Provider, "hasApiKey">[] = [
   { id: "anthropic", name: "Anthropic" },
   { id: "openai", name: "OpenAI" },
-  { id: "google", name: "Google" }
+  { id: "google", name: "Google" },
+  { id: "openrouter", name: "OpenRouter" },
+  { id: "opencodezen", name: "OpenCode Zen" }
 ]
 
 // Available models configuration (updated Jan 2026)
@@ -202,13 +338,24 @@ const AVAILABLE_MODELS: ModelConfig[] = [
     description: "Fast, low-cost, high-performance model",
     available: true
   }
+  // OpenRouter models are fetched dynamically from models.dev API
 ]
+
+// Static models (non-OpenRouter providers)
+const STATIC_MODELS = AVAILABLE_MODELS
 
 export function registerModelHandlers(ipcMain: IpcMain): void {
   // List available models
   ipcMain.handle("models:list", async () => {
+    // Fetch dynamic models from models.dev API
+    const openRouterModels = await fetchOpenRouterModels()
+    const openCodeZenModels = await fetchOpenCodeZenModels()
+
+    // Combine static models with dynamic models from all providers
+    const allModels = [...STATIC_MODELS, ...openRouterModels, ...openCodeZenModels]
+
     // Check which models have API keys configured
-    return AVAILABLE_MODELS.map((model) => ({
+    return allModels.map((model) => ({
       ...model,
       available: hasApiKey(model.provider)
     }))
@@ -225,9 +372,12 @@ export function registerModelHandlers(ipcMain: IpcMain): void {
   })
 
   // Set API key for a provider (stored in ~/.openwork/.env)
-  ipcMain.handle("models:setApiKey", async (_event, { provider, apiKey }: SetApiKeyParams) => {
-    setApiKey(provider, apiKey)
-  })
+  ipcMain.handle(
+    "models:setApiKey",
+    async (_event, { provider, apiKey }: { provider: string; apiKey: string }) => {
+      setApiKey(provider, apiKey)
+    }
+  )
 
   // Get API key for a provider (from ~/.openwork/.env or process.env)
   ipcMain.handle("models:getApiKey", async (_event, provider: string) => {
@@ -252,6 +402,16 @@ export function registerModelHandlers(ipcMain: IpcMain): void {
     event.returnValue = app.getVersion()
   })
 
+  // Get auto-approve setting
+  ipcMain.handle("settings:getAutoApprove", async () => {
+    return getAutoApproveEnabled()
+  })
+
+  // Set auto-approve setting
+  ipcMain.handle("settings:setAutoApprove", async (_event, enabled: boolean) => {
+    setAutoApproveEnabled(enabled)
+  })
+
   // Get workspace path for a thread (from thread metadata)
   ipcMain.handle("workspace:get", async (_event, threadId?: string) => {
     if (!threadId) {
@@ -271,7 +431,7 @@ export function registerModelHandlers(ipcMain: IpcMain): void {
   // Set workspace path for a thread (stores in thread metadata)
   ipcMain.handle(
     "workspace:set",
-    async (_event, { threadId, path: newPath }: WorkspaceSetParams) => {
+    async (_event, { threadId, path: newPath }: { threadId?: string; path: string | null }) => {
       if (!threadId) {
         // Fallback to global setting
         if (newPath) {
@@ -335,7 +495,7 @@ export function registerModelHandlers(ipcMain: IpcMain): void {
   })
 
   // Load files from disk into the workspace view
-  ipcMain.handle("workspace:loadFromDisk", async (_event, { threadId }: WorkspaceLoadParams) => {
+  ipcMain.handle("workspace:loadFromDisk", async (_event, { threadId }: { threadId: string }) => {
     const { getThread } = await import("../db")
 
     // Get workspace path from thread metadata
@@ -408,7 +568,7 @@ export function registerModelHandlers(ipcMain: IpcMain): void {
   // Read a single file's contents from disk
   ipcMain.handle(
     "workspace:readFile",
-    async (_event, { threadId, filePath }: WorkspaceFileParams) => {
+    async (_event, { threadId, filePath }: { threadId: string; filePath: string }) => {
       const { getThread } = await import("../db")
 
       // Get workspace path from thread metadata
@@ -462,7 +622,7 @@ export function registerModelHandlers(ipcMain: IpcMain): void {
   // Read a binary file (images, PDFs, etc.) and return as base64
   ipcMain.handle(
     "workspace:readBinaryFile",
-    async (_event, { threadId, filePath }: WorkspaceFileParams) => {
+    async (_event, { threadId, filePath }: { threadId: string; filePath: string }) => {
       const { getThread } = await import("../db")
 
       // Get workspace path from thread metadata
