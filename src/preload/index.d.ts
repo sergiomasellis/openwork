@@ -1,4 +1,4 @@
-import type { Thread, ModelConfig, StreamEvent, HITLDecision } from '../main/types'
+import type { Thread, ModelConfig, Provider, StreamEvent, HITLDecision } from '../main/types'
 
 interface ElectronAPI {
   ipcRenderer: {
@@ -15,12 +15,18 @@ interface ElectronAPI {
 
 interface CustomAPI {
   agent: {
-    invoke: (threadId: string, message: string, onEvent: (event: StreamEvent) => void) => () => void
+    invoke: (
+      threadId: string,
+      message: string,
+      onEvent: (event: StreamEvent) => void,
+      modelId?: string
+    ) => () => void
     streamAgent: (
       threadId: string,
       message: string,
       command: unknown,
-      onEvent: (event: StreamEvent) => void
+      onEvent: (event: StreamEvent) => void,
+      modelId?: string
     ) => () => void
     interrupt: (
       threadId: string,
