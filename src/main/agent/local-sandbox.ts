@@ -114,7 +114,7 @@ export class LocalSandbox extends FilesystemBackend implements SandboxBackendPro
         // and convert forward slashes to backslashes within quoted strings and bare paths
         processedCommand = command.replace(
           /([A-Za-z]:)(\/[^"'\s]*|\/[^"]*(?=")|\/[^']*(?='))/g,
-          (match, drive, path) => drive + path.replace(/\//g, '\\')
+          (_match, drive, path) => drive + path.replace(/\//g, '\\')
         )
       }
 

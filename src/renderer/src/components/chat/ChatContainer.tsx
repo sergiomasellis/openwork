@@ -10,6 +10,7 @@ import { Folder } from 'lucide-react'
 import { WorkspacePicker, selectWorkspaceFolder } from './WorkspacePicker'
 import { ChatTodos } from './ChatTodos'
 import { ContextUsageIndicator } from './ContextUsageIndicator'
+import { AutoApproveToggle } from './AutoApproveToggle'
 import type { Message } from '@/types'
 
 interface AgentStreamValues {
@@ -408,6 +409,8 @@ export function ChatContainer({ threadId }: ChatContainerProps): React.JSX.Eleme
                 <ModelSwitcher threadId={threadId} />
                 <div className="w-px h-4 bg-border" />
                 <WorkspacePicker threadId={threadId} />
+                <div className="w-px h-4 bg-border" />
+                <AutoApproveToggle />
               </div>
               {tokenUsage && (
                 <ContextUsageIndicator tokenUsage={tokenUsage} modelId={currentModel} />
