@@ -150,6 +150,14 @@ const api = {
       return ipcRenderer.invoke('models:deleteApiKey', provider)
     }
   },
+  settings: {
+    getAutoApprove: (): Promise<boolean> => {
+      return ipcRenderer.invoke('settings:getAutoApprove')
+    },
+    setAutoApprove: (enabled: boolean): Promise<void> => {
+      return ipcRenderer.invoke('settings:setAutoApprove', enabled)
+    }
+  },
   workspace: {
     get: (threadId?: string): Promise<string | null> => {
       return ipcRenderer.invoke('workspace:get', threadId)
@@ -160,7 +168,9 @@ const api = {
     select: (threadId?: string): Promise<string | null> => {
       return ipcRenderer.invoke('workspace:select', threadId)
     },
-    loadFromDisk: (threadId: string): Promise<{
+    loadFromDisk: (
+      threadId: string
+    ): Promise<{
       success: boolean
       files: Array<{
         path: string
@@ -173,7 +183,10 @@ const api = {
     }> => {
       return ipcRenderer.invoke('workspace:loadFromDisk', { threadId })
     },
-    readFile: (threadId: string, filePath: string): Promise<{
+    readFile: (
+      threadId: string,
+      filePath: string
+    ): Promise<{
       success: boolean
       content?: string
       size?: number
@@ -182,7 +195,10 @@ const api = {
     }> => {
       return ipcRenderer.invoke('workspace:readFile', { threadId, filePath })
     },
-    readBinaryFile: (threadId: string, filePath: string): Promise<{
+    readBinaryFile: (
+      threadId: string,
+      filePath: string
+    ): Promise<{
       success: boolean
       content?: string
       size?: number

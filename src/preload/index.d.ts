@@ -20,7 +20,8 @@ interface CustomAPI {
       threadId: string,
       message: string,
       command: unknown,
-      onEvent: (event: StreamEvent) => void
+      onEvent: (event: StreamEvent) => void,
+      modelId?: string
     ) => () => void
     interrupt: (
       threadId: string,
@@ -47,6 +48,10 @@ interface CustomAPI {
     setApiKey: (provider: string, apiKey: string) => Promise<void>
     getApiKey: (provider: string) => Promise<string | null>
   }
+  settings: {
+    getAutoApprove: () => Promise<boolean>
+    setAutoApprove: (enabled: boolean) => Promise<void>
+  }
   workspace: {
     get: (threadId?: string) => Promise<string | null>
     set: (threadId: string | undefined, path: string | null) => Promise<string | null>
@@ -62,14 +67,20 @@ interface CustomAPI {
       workspacePath?: string
       error?: string
     }>
-    readFile: (threadId: string, filePath: string) => Promise<{
+    readFile: (
+      threadId: string,
+      filePath: string
+    ) => Promise<{
       success: boolean
       content?: string
       size?: number
       modified_at?: string
       error?: string
     }>
-    readBinaryFile: (threadId: string, filePath: string) => Promise<{
+    readBinaryFile: (
+      threadId: string,
+      filePath: string
+    ) => Promise<{
       success: boolean
       content?: string
       size?: number

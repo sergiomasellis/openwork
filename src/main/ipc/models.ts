@@ -4,7 +4,15 @@ import * as fs from 'fs/promises'
 import * as path from 'path'
 import type { ModelConfig, Provider } from '../types'
 import { startWatching, stopWatching } from '../services/workspace-watcher'
-import { getOpenworkDir, getApiKey, setApiKey, deleteApiKey, hasApiKey } from '../storage'
+import {
+  getOpenworkDir,
+  getApiKey,
+  setApiKey,
+  deleteApiKey,
+  hasApiKey,
+  getAutoApproveEnabled,
+  setAutoApproveEnabled
+} from '../storage'
 
 // Store for non-sensitive settings only (no encryption needed)
 const store = new Store({
@@ -329,7 +337,7 @@ const AVAILABLE_MODELS: ModelConfig[] = [
     model: 'gemini-2.5-flash-lite',
     description: 'Fast, low-cost, high-performance model',
     available: true
-  },
+  }
   // OpenRouter models are fetched dynamically from models.dev API
 ]
 
@@ -392,6 +400,16 @@ export function registerModelHandlers(ipcMain: IpcMain): void {
   // Sync version info
   ipcMain.on('app:version', (event) => {
     event.returnValue = app.getVersion()
+  })
+
+  // Get auto-approve setting
+  ipcMain.handle('settings:getAutoApprove', async () => {
+    return getAutoApproveEnabled()
+  })
+
+  // Set auto-approve setting
+  ipcMain.handle('settings:setAutoApprove', async (_event, enabled: boolean) => {
+    setAutoApproveEnabled(enabled)
   })
 
   // Get workspace path for a thread (from thread metadata)

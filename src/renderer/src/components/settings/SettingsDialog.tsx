@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Eye, EyeOff, Check, AlertCircle, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Check, AlertCircle, Loader2, ShieldAlert } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
+import { Switch } from '@/components/ui/switch'
 
 interface SettingsDialogProps {
   open: boolean
@@ -50,15 +51,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({})
   const [saving, setSaving] = useState<Record<string, boolean>>({})
   const [loading, setLoading] = useState(true)
+  const [autoApprove, setAutoApprove] = useState(false)
 
   // Load existing settings on mount
   useEffect(() => {
     if (open) {
-      loadApiKeys()
+      loadSettings()
     }
   }, [open])
 
-  async function loadApiKeys() {
+  async function loadSettings() {
     setLoading(true)
     const keys: Record<string, string> = {}
     const saved: Record<string, boolean> = {}
@@ -80,9 +82,28 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       }
     }
 
+    // Load auto-approve setting
+    try {
+      const autoApproveEnabled = await window.api.settings.getAutoApprove()
+      setAutoApprove(autoApproveEnabled)
+    } catch (e) {
+      setAutoApprove(false)
+    }
+
     setApiKeys(keys)
     setSavedKeys(saved)
     setLoading(false)
+  }
+
+  async function handleAutoApproveChange(checked: boolean) {
+    setAutoApprove(checked)
+    try {
+      await window.api.settings.setAutoApprove(checked)
+    } catch (e) {
+      console.error('Failed to save auto-approve setting:', e)
+      // Revert on error
+      setAutoApprove(!checked)
+    }
   }
 
   async function saveApiKey(providerId: string) {
@@ -186,11 +207,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                         apiKeys[provider.id] === '••••••••••••••••'
                       }
                     >
-                      {saving[provider.id] ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        'Save'
-                      )}
+                      {saving[provider.id] ? <Loader2 className="size-4 animate-spin" /> : 'Save'}
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -198,6 +215,39 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </p>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        <Separator />
+
+        <div className="space-y-6 py-2">
+          <div className="text-section-header">AGENT PERMISSIONS</div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="size-4 text-status-warning" />
+                    <label htmlFor="auto-approve" className="text-sm font-medium">
+                      Bypass all permissions
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Automatically approve all agent actions without prompting. Use with caution.
+                  </p>
+                </div>
+                <Switch
+                  id="auto-approve"
+                  checked={autoApprove}
+                  onCheckedChange={handleAutoApproveChange}
+                />
+              </div>
             </div>
           )}
         </div>

@@ -122,3 +122,39 @@ export function deleteApiKey(provider: string): void {
 export function hasApiKey(provider: string): boolean {
   return !!getApiKey(provider)
 }
+
+// Settings management
+const SETTINGS_KEY_PREFIX = 'SETTING_'
+
+export function getSetting(key: string): string | undefined {
+  const envKey = SETTINGS_KEY_PREFIX + key.toUpperCase()
+  const env = parseEnvFile()
+  return env[envKey] || process.env[envKey]
+}
+
+export function setSetting(key: string, value: string): void {
+  const envKey = SETTINGS_KEY_PREFIX + key.toUpperCase()
+  const env = parseEnvFile()
+  env[envKey] = value
+  writeEnvFile(env)
+  process.env[envKey] = value
+}
+
+export function getBooleanSetting(key: string, defaultValue: boolean = false): boolean {
+  const value = getSetting(key)
+  if (value === undefined) return defaultValue
+  return value === 'true' || value === '1'
+}
+
+export function setBooleanSetting(key: string, value: boolean): void {
+  setSetting(key, value ? 'true' : 'false')
+}
+
+// Specific setting for auto-approve permissions
+export function getAutoApproveEnabled(): boolean {
+  return getBooleanSetting('AUTO_APPROVE_PERMISSIONS', false)
+}
+
+export function setAutoApproveEnabled(enabled: boolean): void {
+  setBooleanSetting('AUTO_APPROVE_PERMISSIONS', enabled)
+}
