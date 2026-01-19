@@ -99,6 +99,23 @@ function getModelInstance(modelId?: string): ChatAnthropic | ChatOpenAI | ChatGo
       model,
       apiKey: apiKey
     })
+  } else if (model.startsWith('openrouter/')) {
+    // OpenRouter models use format: openrouter/provider/model-name
+    // Extract the actual model name (everything after 'openrouter/')
+    const openRouterModel = model.replace('openrouter/', '')
+    const apiKey = getApiKey('openrouter')
+    console.log('[Runtime] OpenRouter API key present:', !!apiKey)
+    if (!apiKey) {
+      throw new Error('OpenRouter API key not configured')
+    }
+    // OpenRouter uses OpenAI-compatible API
+    return new ChatOpenAI({
+      model: openRouterModel,
+      openAIApiKey: apiKey,
+      configuration: {
+        baseURL: 'https://openrouter.ai/api/v1'
+      }
+    })
   }
 
   // Default to model string (let deepagents handle it)

@@ -16,7 +16,8 @@ const store = new Store({
 const PROVIDERS: Omit<Provider, 'hasApiKey'>[] = [
   { id: 'anthropic', name: 'Anthropic' },
   { id: 'openai', name: 'OpenAI' },
-  { id: 'google', name: 'Google' }
+  { id: 'google', name: 'Google' },
+  { id: 'openrouter', name: 'OpenRouter' }
 ]
 
 // Available models configuration (updated Jan 2026)
@@ -193,6 +194,79 @@ const AVAILABLE_MODELS: ModelConfig[] = [
     provider: 'google',
     model: 'gemini-2.5-flash-lite',
     description: 'Fast, low-cost, high-performance model',
+    available: true
+  },
+  // OpenRouter models (access multiple providers through one API)
+  {
+    id: 'openrouter/anthropic/claude-sonnet-4',
+    name: 'Claude Sonnet 4 (OpenRouter)',
+    provider: 'openrouter',
+    model: 'anthropic/claude-sonnet-4',
+    description: 'Claude Sonnet 4 via OpenRouter',
+    available: true
+  },
+  {
+    id: 'openrouter/anthropic/claude-3.5-sonnet',
+    name: 'Claude 3.5 Sonnet (OpenRouter)',
+    provider: 'openrouter',
+    model: 'anthropic/claude-3.5-sonnet',
+    description: 'Claude 3.5 Sonnet via OpenRouter',
+    available: true
+  },
+  {
+    id: 'openrouter/openai/gpt-4o',
+    name: 'GPT-4o (OpenRouter)',
+    provider: 'openrouter',
+    model: 'openai/gpt-4o',
+    description: 'GPT-4o via OpenRouter',
+    available: true
+  },
+  {
+    id: 'openrouter/openai/gpt-4o-mini',
+    name: 'GPT-4o Mini (OpenRouter)',
+    provider: 'openrouter',
+    model: 'openai/gpt-4o-mini',
+    description: 'GPT-4o Mini via OpenRouter',
+    available: true
+  },
+  {
+    id: 'openrouter/google/gemini-2.5-pro-preview',
+    name: 'Gemini 2.5 Pro (OpenRouter)',
+    provider: 'openrouter',
+    model: 'google/gemini-2.5-pro-preview-05-06',
+    description: 'Gemini 2.5 Pro Preview via OpenRouter',
+    available: true
+  },
+  {
+    id: 'openrouter/google/gemini-2.5-flash-preview',
+    name: 'Gemini 2.5 Flash (OpenRouter)',
+    provider: 'openrouter',
+    model: 'google/gemini-2.5-flash-preview-05-20',
+    description: 'Gemini 2.5 Flash Preview via OpenRouter',
+    available: true
+  },
+  {
+    id: 'openrouter/meta-llama/llama-3.3-70b-instruct',
+    name: 'Llama 3.3 70B (OpenRouter)',
+    provider: 'openrouter',
+    model: 'meta-llama/llama-3.3-70b-instruct',
+    description: 'Meta Llama 3.3 70B Instruct via OpenRouter',
+    available: true
+  },
+  {
+    id: 'openrouter/deepseek/deepseek-chat-v3-0324',
+    name: 'DeepSeek V3 (OpenRouter)',
+    provider: 'openrouter',
+    model: 'deepseek/deepseek-chat-v3-0324',
+    description: 'DeepSeek Chat V3 via OpenRouter',
+    available: true
+  },
+  {
+    id: 'openrouter/qwen/qwen-2.5-coder-32b-instruct',
+    name: 'Qwen 2.5 Coder 32B (OpenRouter)',
+    provider: 'openrouter',
+    model: 'qwen/qwen-2.5-coder-32b-instruct',
+    description: 'Qwen 2.5 Coder 32B Instruct via OpenRouter',
     available: true
   }
 ]
