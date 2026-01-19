@@ -87,7 +87,7 @@ function getModelInstance(modelId?: string): ChatAnthropic | ChatOpenAI | ChatGo
     }
     return new ChatOpenAI({
       model,
-      openAIApiKey: apiKey
+      apiKey: apiKey
     })
   } else if (model.startsWith('gemini')) {
     const apiKey = getApiKey('google')
@@ -103,15 +103,15 @@ function getModelInstance(modelId?: string): ChatAnthropic | ChatOpenAI | ChatGo
     // OpenRouter models use format: openrouter/provider/model-name
     // Extract the actual model name (everything after 'openrouter/')
     const openRouterModel = model.replace('openrouter/', '')
-    const apiKey = getApiKey('openrouter')
-    console.log('[Runtime] OpenRouter API key present:', !!apiKey)
-    if (!apiKey) {
+    const openRouterApiKey = getApiKey('openrouter')
+    console.log('[Runtime] OpenRouter API key present:', !!openRouterApiKey)
+    if (!openRouterApiKey) {
       throw new Error('OpenRouter API key not configured')
     }
     // OpenRouter uses OpenAI-compatible API
     return new ChatOpenAI({
       model: openRouterModel,
-      openAIApiKey: apiKey,
+      apiKey: openRouterApiKey,
       configuration: {
         baseURL: 'https://openrouter.ai/api/v1'
       }
